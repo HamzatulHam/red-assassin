@@ -178,6 +178,13 @@ h2 { margin: 26px 0 12px; }
   border: 1px solid rgba(255, 213, 79, .4);
 }
 .bar-dl:hover { background: rgba(255, 213, 79, .25); }
+.bar-install {
+  background: rgba(144, 202, 249, .15); color: #90caf9;
+  border: 1px solid rgba(144, 202, 249, .45);
+  padding: 5px 10px; border-radius: 6px;
+  font-size: 13px; font-weight: 700; cursor: pointer;
+}
+.bar-install:hover { background: rgba(144, 202, 249, .28); }
 .hud-shield { color: #90caf9; }
 .hud-wallet { color: #ffd54f; }
 
