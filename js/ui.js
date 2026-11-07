@@ -281,6 +281,59 @@ RA.UI = (function () {
         ? T().fullscreenOff
         : T().fullscreen;
     });
+
+    /* ---------- установка как приложение (PWA) ---------- */
+    const instBtn = el('install-btn');
+    let deferredPrompt = null;
+
+    const isStandalone = function () {
+      return window.matchMedia('(display-mode: standalone)').matches ||
+             window.matchMedia('(display-mode: fullscreen)').matches ||
+             window.navigator.standalone === true;
+    };
+    const inTelegram = function () {
+      try {
+        return !!(window.Telegram && window.Telegram.WebApp &&
+                  window.Telegram.WebApp.platform &&
+                  window.Telegram.WebApp.platform !== 'unknown');
+      } catch (e) { return false; }
+    };
+    const refreshInstallBtn = function () {
+      // прячем, если уже установлено, или игра открыта внутри Telegram
+      instBtn.classList.toggle('hidden', isStandalone() || inTelegram());
+    };
+
+    window.addEventListener('beforeinstallprompt', function (e) {
+      e.preventDefault();
+      deferredPrompt = e;
+      refreshInstallBtn();
+    });
+    window.addEventListener('appinstalled', function () {
+      deferredPrompt = null;
+      instBtn.classList.add('hidden');
+    });
+
+    instBtn.addEventListener('click', function () {
+      this.blur();
+      if (deferredPrompt) {
+        deferredPrompt.prompt();                    // настоящее окно установки
+        deferredPrompt.userChoice.then(function (choice) {
+          if (choice && choice.outcome === 'accepted') instBtn.classList.add('hidden');
+          deferredPrompt = null;
+        }).catch(function () { deferredPrompt = null; });
+        return;
+      }
+      // события установки нет (iPhone или другой браузер) — показываем путь
+      const ua = navigator.userAgent || '';
+      const isIOS = /iPad|iPhone|iPod/.test(ua) ||
+                    (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+      if (isIOS) {
+        alert('На iPhone установите так (Safari):\n\n1. Нажмите «Поделиться» (квадрат со стрелкой внизу)\n2. Выберите «На экран „Домой“»\n3. Нажмите «Добавить»\n\nПоявится иконка игры — запуск в полный экран и работает без интернета.');
+      } else {
+        alert('Установите так (Chrome):\n\n1. Откройте меню браузера (⋮ три точки справа вверху)\n2. Выберите «Установить приложение» или «Добавить на главный экран»\n\nПоявится иконка игры — запуск в полный экран и работает без интернета.');
+      }
+    });
+    refreshInstallBtn();
   }
 
   function init() {
