@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Красный асасин — бесплатная онлайн-игра раннер: беги, лазай по стенам, собирай золото и не попадись закону.">
+<title>Красный асасин — играть онлайн</title>
+<!-- Telegram Mini App: если игра открыта в Telegram — получаем его API -->
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<header class="site-header">
+  <div class="wrap header-in">
+    <a class="logo" href="#">🎮 ИГРЫ <b>ОНЛАЙН</b></a>
+    <nav>
+      <a href="#">Популярные</a>
+      <a href="#">Новинки</a>
+      <a href="#">Игры Ассасин</a>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+  <p class="crumbs">Раздел: <a href="#">Игры Ассасин</a></p>
+  <h1>Красный асасин</h1>
+
+  <div id="stage-wrap">
+    <div id="stage-bar">
+      <span class="bar-left">
+        <span id="sound-state" title="Звук (M)">🔊</span>
+        <span id="bar-wallet" title="Кошелёк">💰 0</span>
+      </span>
+      <span class="bar-right">
+        <a id="dl-btn" class="bar-dl" href="red-assassin.zip" download="krasnyj-asasin.zip" title="Скачать игру архивом на компьютер">⬇️ Скачать</a>
+        <button id="fs-btn" type="button">⛶ Играть на весь экран</button>
+      </span>
+    </div>
+    <div id="stage">
+      <canvas id="game" width="960" height="540"></canvas>
+
+      <div id="hud"></div>
+      <div id="banner"></div>
+      <button id="btn-throw" type="button" title="Бросить оружие (X)">🎯</button>
+
+      <div class="overlay" id="ov-menu">
+        <h2 class="game-title">КРАСНЫЙ<br>АСАССИН</h2>
+        <p class="ov-sub" id="menu-sub"></p>
+        <div class="menu-btns">
+          <button class="btn-primary" id="btn-start" type="button">▶ Играть</button>
+          <button class="btn-secondary" id="btn-shop" type="button">🛒 Магазин</button>
+        </div>
+        <p class="ov-hint" id="menu-controls"></p>
+        <p class="ov-best" id="menu-best"></p>
+      </div>
+
+      <div class="overlay hidden" id="ov-over">
+        <h2 class="over-title" id="over-title"></h2>
+        <div class="stats">
+          <div class="stat"><span>Очки</span><b id="st-score">0</b></div>
+          <div class="stat"><span>Золото</span><b id="st-coins">0</b></div>
+          <div class="stat"><span>Дистанция</span><b id="st-dist">0</b></div>
+          <div class="stat"><span>Рекорд</span><b id="st-best">0</b></div>
+        </div>
+        <p id="over-record" class="record hidden">🎉 Новый рекорд!</p>
+        <p id="over-wallet" class="ov-best"></p>
+        <div class="menu-btns">
+          <button class="btn-primary" id="btn-restart" type="button">↻ Ещё раз</button>
+          <button class="btn-secondary" id="btn-shop2" type="button">🛒 Магазин</button>
+        </div>
+        <p class="ov-hint">или нажмите ПРОБЕЛ</p>
+      </div>
+
+      <div class="overlay hidden" id="ov-shop">
+        <div class="shop-head">
+          <h2>🛒 МАГАЗИН</h2>
+          <span id="shop-wallet">💰 0</span>
+          <button id="btn-shop-close" class="btn-x" type="button" title="Закрыть">✕</button>
+        </div>
+        <div class="shop-tabs">
+          <button id="tab-skins" type="button">Костюмы</button>
+          <button id="tab-weapons" type="button">Оружие</button>
+          <button id="tab-upg" type="button">Прокачка</button>
+        </div>
+        <div id="shop-items" class="shop-items"></div>
+        <p id="shop-msg" class="shop-msg"></p>
+      </div>
+
+      <div class="overlay hidden" id="ov-pause">
+        <h2>ПАУЗА</h2>
+        <p class="ov-hint"></p>
+      </div>
+    </div>
+  </div>
+
+  <div class="rating">
+    <span id="stars"></span>
+    <span id="rating-info"></span>
+    <span class="rate-hint">— поставьте свою оценку!</span>
+  </div>
+
+  <section class="desc">
+    <p><b>Красный асасин</b> — динамичный раннер, в котором экран не останавливается ни на
+    секунду. Вы играете за ниндзя в красном костюме: перепрыгивайте огромные овраги,
+    запрыгивайте на ворота и башни, карабкайтесь по стенам и не попадайтесь в руки закону.</p>
+    <p>По пути собирайте мешочки с золотыми монетами, а если стражник стоит слишком близко —
+    прыгните ему на голову и обезвредьте! Скорость растёт с каждым уровнем. Игра
+    совершенно безвредная и не несёт никакого дурного характера — только ловкость,
+    реакция и много золота. Играйте бесплатно прямо в браузере!</p>
+  </section>
+
+  <section class="similar">
+    <h2>Похожие игры</h2>
+    <div class="cards">
+      <a class="card" href="#">
+        <div class="thumb t1">🏎️</div><b>Супербыстрый кар</b><span>Гонки</span>
+      </a>
+      <a class="card" href="#">
+        <div class="thumb t2">🐱</div><b>Кити в мире моды</b><span>Для девочек</span>
+      </a>
+      <a class="card" href="#">
+        <div class="thumb t3">🎃</div><b>Хэллоуинский маджонг</b><span>Логические</span>
+      </a>
+    </div>
+  </section>
+</main>
+
+<footer class="site-footer">
+  <div class="wrap">Учебная демо-страница в стиле игровых порталов. Код открыт — меняйте что хотите!</div>
+</footer>
+
+<script src="js/config.js"></script>
+<script src="js/save.js"></script>
+<script src="js/world.js"></script>
+<script src="js/entities.js"></script>
+<script src="js/player.js"></script>
+<script src="js/game.js"></script>
+<script src="js/ui.js"></script>
+</body>
+</html>
