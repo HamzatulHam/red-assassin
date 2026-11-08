@@ -9,12 +9,13 @@ RA.Particles = {
   list: [],
   clear: function () { this.list.length = 0; },
 
-  // выброс цветных точек (пыль, искры)
+  // выброс цветных точек (пыль, искры) — с ограничением количества
   burst: function (x, y, color, n, o) {
     o = o || {};
     const spread = o.spread != null ? o.spread : 90;
     const up = o.up != null ? o.up : 110;
     for (let i = 0; i < n; i++) {
+      if (this.list.length > 260) return;        // защита от перегрузки
       this.list.push({
         kind: 'dot', x: x, y: y, color: color,
         vx: (o.dir != null ? o.dir : RA.rand(-1, 1)) * Math.random() * spread,
