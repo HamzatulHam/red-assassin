@@ -268,13 +268,18 @@ RA.UI = (function () {
 
     const fsBtn = el('fs-btn');
     fsBtn.addEventListener('click', function () {
+      this.blur();
       const box = el('stage-wrap');
+      const req = box.requestFullscreen || box.webkitRequestFullscreen;
+      if (!req) {
+        alert('Полноэкранный режим недоступен в этом браузере.\n\nСовет: установи игру как приложение (кнопка 📲 на сайте) — она откроется на весь экран.');
+        return;
+      }
       if (!document.fullscreenElement) {
-        (box.requestFullscreen || box.webkitRequestFullscreen || function () {}).call(box);
+        req.call(box);
       } else {
         (document.exitFullscreen || document.webkitExitFullscreen || function () {}).call(document);
       }
-      this.blur();
     });
     document.addEventListener('fullscreenchange', function () {
       fsBtn.textContent = document.fullscreenElement
@@ -285,6 +290,7 @@ RA.UI = (function () {
     /* ---------- установка как приложение (PWA) ---------- */
     const instBtn = el('install-btn');
     let deferredPrompt = null;
+    let playing = false;   // идёт игра: прячем «Установить» и «Скачать»
 
     const isStandalone = function () {
       return window.matchMedia('(display-mode: standalone)').matches ||
@@ -298,19 +304,22 @@ RA.UI = (function () {
                   window.Telegram.WebApp.platform !== 'unknown');
       } catch (e) { return false; }
     };
-    const refreshInstallBtn = function () {
-      // прячем, если уже установлено, или игра открыта внутри Telegram
-      instBtn.classList.toggle('hidden', isStandalone() || inTelegram());
+    const applyBarVisibility = function () {
+      // во время игры показываем только звук/кошелёк/полный экран
+      el('dl-btn').classList.toggle('hidden', playing);
+      const instOk = !playing && !isStandalone() && !inTelegram();
+      instBtn.classList.toggle('hidden', !instOk);
     };
+    const refreshInstallBtn = applyBarVisibility;
 
     window.addEventListener('beforeinstallprompt', function (e) {
       e.preventDefault();
       deferredPrompt = e;
-      refreshInstallBtn();
+      applyBarVisibility();
     });
     window.addEventListener('appinstalled', function () {
       deferredPrompt = null;
-      instBtn.classList.add('hidden');
+      applyBarVisibility();
     });
 
     instBtn.addEventListener('click', function () {
@@ -318,7 +327,7 @@ RA.UI = (function () {
       if (deferredPrompt) {
         deferredPrompt.prompt();                    // настоящее окно установки
         deferredPrompt.userChoice.then(function (choice) {
-          if (choice && choice.outcome === 'accepted') instBtn.classList.add('hidden');
+          if (choice && choice.outcome === 'accepted') applyBarVisibility();
           deferredPrompt = null;
         }).catch(function () { deferredPrompt = null; });
         return;
@@ -333,7 +342,7 @@ RA.UI = (function () {
         alert('Установите так (Chrome):\n\n1. Откройте меню браузера (⋮ три точки справа вверху)\n2. Выберите «Установить приложение» или «Добавить на главный экран»\n\nПоявится иконка игры — запуск в полный экран и работает без интернета.');
       }
     });
-    refreshInstallBtn();
+    applyBarVisibility();
   }
 
   function init() {
@@ -348,6 +357,7 @@ RA.UI = (function () {
     init: init,
     updateHUD: updateHUD,
     setWallet: setWallet,
+    setPlaying: setPlaying,
     banner: function (text) {
       const b = el('banner');
       b.textContent = text;
