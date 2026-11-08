@@ -177,6 +177,8 @@ RA.World = (function () {
     S.gates = S.gates.filter(function (g) { return g.x + g.w > keep; });
   }
 
+  let pruneTick = 0;   // счётчик кадров для редкой чистки мира
+
   /* ---------- публичный интерфейс ---------- */
 
   return {
@@ -191,7 +193,7 @@ RA.World = (function () {
     // дорисовать мир впереди камеры (вызывать каждый кадр)
     ensure: function (camX, speed) {
       while (S.genX < camX + RA.CONFIG.width * 2) addPattern(speed);
-      prune(camX);
+      if ((pruneTick++ & 31) === 0) prune(camX);   // чистка раз в ~32 кадра
     },
 
     // отрисовка земли, башен, стен и ворот (герой рисуется поверх)
@@ -205,17 +207,39 @@ RA.World = (function () {
         if (x + s.w < -40 || x > W + 40) continue;
 
         if (s.kind === 'ground' || s.kind === 'tower') {
-          ctx.fillStyle = s.kind === 'ground' ? '#241411' : '#2b1a15';
+          // объём: градиент сверху вниз + тень на правой грани
+          const g2 = ctx.createLinearGradient(0, s.y, 0, s.y + Math.min(s.h, 210));
+          g2.addColorStop(0, s.kind === 'ground' ? '#3a221a' : '#43281d');
+          g2.addColorStop(1, '#170c09');
+          ctx.fillStyle = g2;
           ctx.fillRect(x, s.y, s.w, s.h);
-          ctx.fillStyle = s.kind === 'ground' ? '#4a2c1f' : '#57301f';
+          ctx.fillStyle = 'rgba(0,0,0,.35)';
+          ctx.fillRect(x + s.w - 4, s.y, 4, s.h);
+          // верхняя кромка
+          ctx.fillStyle = s.kind === 'ground' ? '#4e3025' : '#5c3524';
           ctx.fillRect(x, s.y, s.w, 8);
-          ctx.fillStyle = 'rgba(232,90,60,.35)';       // красная кромка на закате
+          ctx.fillStyle = 'rgba(255,120,80,.4)';
           ctx.fillRect(x, s.y, s.w, 2);
-          ctx.fillStyle = 'rgba(0,0,0,.22)';           // швы камня
+          // кустики травы (детерминированно по позиции)
+          const tufts = Math.min(6, Math.floor(s.w / 95));
+          ctx.fillStyle = '#2f4a26';
+          for (let tI = 0; tI < tufts; tI++) {
+            const tx = s.x + (0.15 + 0.75 * RA.hash(s.x * 0.37 + tI * 13)) * s.w;
+            const th = 5 + RA.hash(s.x + tI) * 6;
+            ctx.beginPath();
+            ctx.moveTo(tx - 4, s.y + 1);
+            ctx.lineTo(tx, s.y - th);
+            ctx.lineTo(tx + 4, s.y + 1);
+            ctx.closePath(); ctx.fill();
+          }
+          // швы камня
+          ctx.fillStyle = 'rgba(0,0,0,.22)';
           const step = 46, start = Math.ceil(s.x / step) * step;
           for (let sx = start; sx < s.x + s.w; sx += step) ctx.fillRect(sx - cam, s.y + 10, 2, 26);
         } else if (s.kind === 'wall') {
-          ctx.fillStyle = '#4a1d18';
+          const wg = ctx.createLinearGradient(x, 0, x + s.w, 0);
+          wg.addColorStop(0, '#5a241d'); wg.addColorStop(0.35, '#431a15'); wg.addColorStop(1, '#2f120d');
+          ctx.fillStyle = wg;
           ctx.fillRect(x, s.y, s.w, s.h);
           ctx.fillStyle = '#6b2a22';
           ctx.fillRect(x, s.y, s.w, 6);
@@ -230,6 +254,8 @@ RA.World = (function () {
         const x = g.x - cam;
         if (x + g.w < -60 || x > W + 60) continue;
         const pw = 14, base = g.base;
+        ctx.fillStyle = 'rgba(0,0,0,.25)';             // тень на земле
+        ctx.beginPath(); ctx.ellipse(x + g.w / 2, base + 3, g.w * 0.75, 5, 0, 0, 7); ctx.fill();
         ctx.fillStyle = '#a83228';                     // столбы
         ctx.fillRect(x, g.y + 8, pw, base - g.y - 8);
         ctx.fillRect(x + g.w - pw, g.y + 8, pw, base - g.y - 8);
