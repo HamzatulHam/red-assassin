@@ -80,15 +80,15 @@ RA.Coins = {
       const c = cs[i];
       if (c.taken) continue;
 
-      // магнит золота (прокачка): притягиваем мешочки поблизости
+      // магнит золота (прокачка): 1 уровень — лёгкое притяжение, 5-й — «пылесос»
       const lvl = game.magnet || 0;
       if (lvl > 0) {
         const dx = (player.x + player.w / 2) - c.x;
         const dy = (player.y + player.h / 2) - c.y;
-        const R = 70 + 45 * lvl;
+        const R = 45 + 30 * lvl;                 // радиус: 75 → 195 px
         if (dx * dx + dy * dy < R * R) {
           const d = Math.sqrt(dx * dx + dy * dy) || 1;
-          const pull = (280 + 100 * lvl) * dt;
+          const pull = (90 + 90 * lvl) * dt;     // скорость: 180 → 540 px/с
           c.x += dx / d * pull;
           c.y += dy / d * pull;
         }
