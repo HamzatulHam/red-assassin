@@ -33,13 +33,20 @@ RA.Game = (function () {
   let duel = { p1: null, p2: null, s1: 0, s2: 0, phase: 'fight', timer: 0, winner: 0 };
   let duelKeys = { a: 0, d: 0, s: 0, left: 0, right: 0, up: 0, down: 0 };
 
+  // босс, достижения, серия
+  let nextBossDist = 1200, bossActive = false;
+  let stats = { kills: 0 };
+  let comboN = 0, comboT = 0;
+  let lastStart = { mode: 'endless', idx: 0 };
+
   let skyC, vinC;
   let stars = [];
   let last = 0;
   let drawDt = 0;
 
   function score() {
-    return Math.floor(dist) + coinsN * CFG.score.coinValue + stomps * CFG.score.stompValue;
+    return Math.floor(dist) + coinsN * CFG.score.coinValue +
+           stomps * CFG.score.stompValue + (api._scoreBonus || 0);
   }
   function walletNow() { return RA.Save.get().gold + Math.floor(runGold); }
 
@@ -106,6 +113,10 @@ RA.Game = (function () {
     camX = -100; shake = 0;
     overShown = false; deathT = 0;
     runGold = 0; wcd = 0;
+    stats = { kills: 0 };
+    comboN = 0; comboT = 0;
+    api._scoreBonus = 0;
+    bossActive = false; nextBossDist = 1200;
     state = 'play';
     const d = RA.Save.get();
     RA.Player.p.shields = d.up.shield || 0;
@@ -191,20 +202,62 @@ RA.Game = (function () {
     RA.Particles.pop(c.x, c.y - 16, '+' + CFG.score.coinValue, '#ffd54f');
   }
 
+  function ach(id) {
+    const d = RA.Save.get();
+    if (d.ach && d.ach.indexOf(id) !== -1) return;
+    const def = CFG.achievements.find(function (a) { return a.id === id; });
+    if (!def) return;
+    if (!d.ach) d.ach = [];
+    d.ach.push(id);
+    RA.Save.save();
+    RA.UI.toast('🏅 Достижение: ' + def.name);
+    sfx.level();
+  }
+
+  function registerKill(g) {
+    stats.kills++;
+    comboN = comboT > 0 ? comboN + 1 : 1;
+    comboT = 2.5;
+    if (comboN >= 2) {
+      RA.Particles.pop(g.x + g.w / 2, g.y - g.h - 34, 'СЕРИЯ ×' + comboN, '#ffab40');
+      api._scoreBonus = (api._scoreBonus || 0) + (comboN - 1) * 10;
+    }
+    if (stats.kills === 1) ach('firstkill');
+    if (stats.kills >= 10) ach('slayer10');
+  }
+
   function onStomp(g) {
     stomps++;
+    registerKill(g);
     sfx.stomp();
     shake = Math.max(shake, 5);
     RA.Particles.burst(g.x + g.w / 2, g.y - g.h, '#ffd54f', 10, { life: 0.6, spread: 120, up: 160, size: 4 });
-    RA.Particles.pop(g.x + g.w / 2, g.y - g.h - 12, '+' + CFG.score.stompValue, '#ffe082');
+    RA.Particles.pop(g.x + g.w / 2, g.y - g.h - 12, '+' + (CFG.score.stompValue + (comboN - 1) * 10), '#ffe082');
   }
 
   function onWeaponKill(g) {
     stomps++;
+    registerKill(g);
     sfx.stomp();
     shake = Math.max(shake, 4);
     RA.Particles.burst(g.x + g.w / 2, g.y - g.h / 2, '#ff8a80', 8, { life: 0.5, spread: 110, up: 130, size: 3 });
-    RA.Particles.pop(g.x + g.w / 2, g.y - g.h - 12, '+' + CFG.score.stompValue, '#ff8a80');
+    RA.Particles.pop(g.x + g.w / 2, g.y - g.h - 12, '+' + (CFG.score.stompValue + (comboN - 1) * 10), '#ff8a80');
+  }
+
+  function onBossKill(g) {
+    registerKill(g);
+    shake = 14;
+    sfx.win();
+    ach('boss1');
+    stomps += 8;
+    RA.Particles.burst(g.x + g.w / 2, g.y - g.h / 2, '#ff1744', 30, { life: 0.9, spread: 300, up: 260, size: 5 });
+    RA.Particles.pop(g.x + g.w / 2, g.y - g.h - 20, 'БОСС ПОВЕРЖЕН!', '#ffd54f');
+    for (let i = 0; i < 8; i++) {
+      RA.World.state.coins.push({
+        x: g.x + g.w / 2 + (i - 3.5) * 34, y: g.y - g.h - 10 - (i % 2) * 26,
+        taken: false, ph: Math.random() * 6
+      });
+    }
   }
 
   function onShieldHit(g) {
@@ -248,6 +301,10 @@ RA.Game = (function () {
     if (w.lob) { cfg.vx = 460; cfg.vy = -320; cfg.grav = true; }
     cfg.grav = cfg.grav || !!w.gravity;
     RA.Projectiles.throw(w.id, mx, my, cfg);
+    if (w.id === 'dual') {
+      cfg.vy = 46;
+      RA.Projectiles.throw(w.id, mx, my - 12, cfg);
+    }
     sfx.throwK();
   }
 
@@ -340,16 +397,61 @@ RA.Game = (function () {
         RA.UI.gameOver({
           title: titles[RA.Player.p.cause] || T.caughtTitle,
           score: sc, coins: coinsN, dist: Math.floor(dist), best: best, record: record,
-          toWallet: earned, campaign: campaign.active, idx: campaign.idx
+          toWallet: earned, campaign: campaign.active, idx: campaign.idx,
+          kills: stats.kills
         });
         RA.UI.setPlaying(false);
       }
     }
 
     RA.Particles.update(dt);
+    comboT = Math.max(0, comboT - dt);
     shake = Math.max(0, shake - dt * 26);
 
     if (state === 'play') {
+      // достижения
+      if (dist >= 500) ach('run500');
+      if (runGold >= 100) ach('rich');
+      if (RA.Player.p.dashesUsed >= 5) ach('wind');
+      const biomesSeen = RA.lsGet('ra_biomes_seen', []);
+      if (biomesSeen.indexOf(biomeIdx) === -1) {
+        biomesSeen.push(biomeIdx);
+        RA.lsSet('ra_biomes_seen', biomesSeen);
+      }
+      if (biomesSeen.length >= 5) ach('allbiomes');
+      if (mode === 'campaign' && RA.Save.get().campaign.done.length >= 5) ach('cam5');
+      // контроль босса
+      const guardsNow = RA.World.state.guards;
+      if (bossActive && !guardsNow.some(function (g) { return g.type === 'boss' && !g.dead; })) {
+        bossActive = false;
+      }
+      // босс в бесконечном режиме
+      if (mode === 'endless' && !bossActive && dist >= nextBossDist) {
+        bossActive = true;
+        nextBossDist += 1200;
+        RA.World.state.guards.push({
+          type: 'boss', x: RA.Player.p.x + 760, y: CFG.groundY, w: 70, h: 92,
+          x0: RA.Player.p.x + 760, range: 0, dir: -1, dead: 0, ph: 0,
+          hp: 12, maxHp: 12, hurtT: 0, cd: 0, draw: 0, jumpT: 0, jumpOff: 0,
+          slamCd: 2.5, waveQueued: false
+        });
+        RA.UI.banner('⚠ БОСС!');
+        sfx.thunder();
+      }
+      // босс в кампании — финальный уровень
+      if (mode === 'campaign' && campaign.idx === CFG.campaign.levels - 1 &&
+          !bossActive && dist >= campaign.goal - 80) {
+        bossActive = true;
+        RA.World.state.guards.push({
+          type: 'boss', x: RA.Player.p.x + 760, y: CFG.groundY, w: 70, h: 92,
+          x0: RA.Player.p.x + 760, range: 0, dir: -1, dead: 0, ph: 0,
+          hp: 12, maxHp: 12, hurtT: 0, cd: 0, draw: 0, jumpT: 0, jumpOff: 0,
+          slamCd: 2.5, waveQueued: false
+        });
+        RA.UI.banner('⚠ БОСС!');
+        sfx.thunder();
+      }
+
       const distStr = campaign.active
         ? Math.min(Math.floor(dist), campaign.goal) + ' / ' + campaign.goal
         : Math.floor(dist);
@@ -863,6 +965,9 @@ RA.Game = (function () {
       } else if (isThrowKey(e)) {
         if (mode === 'duel' && state === 'play' && duel.p1) duelThrow(duel.p1, duel.p2);
         else throwWeapon();
+      } else if (e.code === 'ShiftLeft' || e.code === 'ShiftRight' || e.code === 'KeyC' ||
+                 e.key === 'c' || e.key === 'C' || e.key === 'с' || e.key === 'С') {
+        doDash();
       } else if (e.code === 'KeyM' || e.key === 'm' || e.key === 'M' || e.key === 'ь' || e.key === 'Ь') {
         RA.UI.soundIcon(RA.Sound.toggle());
       }
@@ -947,6 +1052,11 @@ RA.Game = (function () {
     startCampaign(Math.min(campaign.idx + 1, CFG.campaign.levels - 1));
   }
 
+  function doDash() {
+    if (mode === 'duel' || state !== 'play') return;
+    RA.Player.doDash(api);
+  }
+
   const api = {
     init: init,
     start: start,
@@ -959,9 +1069,12 @@ RA.Game = (function () {
     onCoin: onCoin,
     onStomp: onStomp,
     onWeaponKill: onWeaponKill,
+    onBossKill: onBossKill,
     onShieldHit: onShieldHit,
     onExplosion: onExplosion,
+    addShake: function (v) { shake = Math.max(shake, v); },
     throwWeapon: throwWeapon,
+    doDash: doDash,
     get speed() { return speed; },
     get time() { return time; },
     get magnet() { return magnetLvl; },
