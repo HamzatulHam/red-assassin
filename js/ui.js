@@ -18,6 +18,7 @@ RA.UI = (function () {
 
   let playing = false;          // идёт игра: прячем «Установить» и «Скачать»
   let deferredPrompt = null;    // событие установки браузера
+  let rotateMode = false;       // игра развернута на 90° (вертикальный тач-экран)
 
   const isStandalone = function () {
     return window.matchMedia('(display-mode: standalone)').matches ||
@@ -32,16 +33,18 @@ RA.UI = (function () {
     } catch (e) { return false; }
   };
 
-  // во время игры ИЛИ в полноэкранном режиме в панели остаются только звук/кошелёк/полный экран
+  // во время игры, в полноэкранном режиме или при авто-повороте
+  // в панели остаются только звук/кошелёк (полный экран в повороте не нужен)
   const isFullscreen = function () {
     return !!(document.fullscreenElement || document.webkitFullscreenElement);
   };
   const applyBarVisibility = function () {
-    const dl = el('dl-btn'), inst = el('install-btn');
+    const dl = el('dl-btn'), inst = el('install-btn'), fs = el('fs-btn');
     if (!dl || !inst) return;
-    const hide = playing || isFullscreen();
+    const hide = playing || isFullscreen() || rotateMode;
     dl.classList.toggle('hidden', hide);
     inst.classList.toggle('hidden', hide || isStandalone() || inTelegram());
+    if (fs) fs.classList.toggle('hidden', rotateMode);
   };
 
   // вызывается из game.js при старте/конце забега
@@ -370,17 +373,40 @@ RA.UI = (function () {
 
     applyBarVisibility();
 
-    /* ---------- подсказка «поверни телефон» на вертикальных экранах ---------- */
+    /* ---------- авто-поворот игры на вертикальных тач-экранах ----------
+       В Telegram и некоторых браузерах экран не крутится при повороте
+       телефона — тогда игра разворачивается сама на 90°: держи телефон
+       боком, и она занимает весь экран. Кнопка ✕ отключает поворот. */
     const rotateHint = el('rotate-hint');
-    const updateRotateHint = function () {
-      if (!rotateHint) return;
-      const coarse = window.matchMedia('(pointer: coarse)').matches;   // тач-экран
-      const portrait = window.matchMedia('(orientation: portrait)').matches;
-      rotateHint.classList.toggle('hidden', !(coarse && portrait));
+    const rotateClose = el('rotate-close');
+    const stageWrap = el('stage-wrap');
+    let rotateTimer = null;
+    const noRotatePref = function () {
+      try { return sessionStorage.getItem('ra_no_rotate') === '1'; } catch (e) { return false; }
     };
-    window.addEventListener('resize', updateRotateHint);
-    window.addEventListener('orientationchange', updateRotateHint);
-    updateRotateHint();
+    const updateRotateMode = function () {
+      if (!rotateHint || !stageWrap) return;
+      const need = window.matchMedia('(pointer: coarse)').matches &&   // тач-экран
+                   window.matchMedia('(orientation: portrait)').matches &&
+                   !noRotatePref();
+      rotateMode = need;
+      stageWrap.classList.toggle('rotated', need);
+      rotateHint.classList.remove('show');
+      clearTimeout(rotateTimer);
+      if (need) {
+        rotateTimer = setTimeout(function () { rotateHint.classList.add('show'); }, 350);
+      }
+      applyBarVisibility();
+    };
+    if (rotateClose) rotateClose.addEventListener('click', function () {
+      try { sessionStorage.setItem('ra_no_rotate', '1'); } catch (e) {}
+      updateRotateMode();
+    });
+    window.addEventListener('resize', updateRotateMode);
+    window.addEventListener('orientationchange', function () {
+      setTimeout(updateRotateMode, 80);   // даём вьюпорту пересчитаться после поворота
+    });
+    updateRotateMode();
   }
 
   function init() {
