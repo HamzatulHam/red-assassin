@@ -165,6 +165,30 @@ RA.Guards = {
         g.x += g.dir * 40 * dt;
         if (g.x < g.x0) { g.x = g.x0; g.dir = 1; }
         if (g.x > g.x0 + g.range) { g.x = g.x0 + g.range; g.dir = -1; }
+      } else if (g.type === 'boss') {
+        /* ---- БОСС: идёт к герою, прыгает и бьёт волной ---- */
+        g.ph += dt * 4;
+        const dxp = player.x - g.x;
+        if (dxp > 0) g.x += 55 * dt;              // медленно догоняет
+        g.slamCd = (g.slamCd || 3) - dt;
+        if (g.slamCd <= 0 && dxp < 300 && dxp > -80) {
+          g.slamCd = 3.5 + Math.random() * 2;
+          g.jumpT = 0.55;                          // прыжок-замах
+          g.waveQueued = true;
+        }
+        if (g.jumpT > 0) {
+          g.jumpT -= dt;
+          g.jumpOff = Math.sin((1 - g.jumpT / 0.55) * Math.PI) * 34;
+          if (g.jumpT <= 0) {
+            g.jumpOff = 0;
+            if (g.waveQueued) {
+              g.waveQueued = false;
+              RA.EnemyArrows.wave(g.x - 20, g.y - 26);
+              RA.Sound.sfx.boom();
+              game.addShake(6);
+            }
+          }
+        } else g.jumpOff = 0;
       } else if (g.type === 'shadow') {
         if (!g.dash) {
           g.ph += dt * 5;
@@ -192,12 +216,23 @@ RA.Guards = {
       if (player.state === 'dead' || player.state === 'climb' || player.invuln > 0) continue;
 
       /* --- столкновение --- */
+      const touchY = g.jumpOff || 0;
       if (player.x < g.x + g.w && player.x + player.w > g.x &&
-          player.y < g.y && player.y + player.h > g.y - g.h) {
+          player.y < g.y + touchY && player.y + player.h > g.y - g.h + touchY) {
         const stomp = RA.CONFIG.player.stompKill && player.vy > 120 &&
                       (player.y + player.h) < g.y - g.h * 0.45;
         const heavy = g.type === 'heavy';
-        if (stomp && !(heavy)) {
+        const boss = g.type === 'boss';
+        if (boss) {
+          // босс крепкий: топтание наносит 2 урона и подбрасывает
+          player.vy = -RA.CONFIG.player.stompBounce;
+          player.jumps = 1;
+          g.hp -= 2;
+          g.hurtT = 0.25;
+          RA.Sound.sfx.clank();
+          RA.Particles.burst(g.x + g.w / 2, g.y - g.h + 20, '#ffe0b2', 6, { life: 0.4, spread: 90, up: 90 });
+          if (g.hp <= 0) { g.dead = 0.001; game.onBossKill(g); }
+        } else if (stomp && !(heavy)) {
           g.dead = 0.001;
           player.vy = -RA.CONFIG.player.stompBounce;
           player.jumps = 1;
@@ -242,7 +277,34 @@ RA.Guards = {
       const walk = g.dead ? 0 : Math.sin(g.ph) * 5;
       const hurt = g.hurtT > 0;
 
-      if (g.type === 'shadow') {
+      if (g.type === 'boss') {
+        /* ---- БОСС-СТРАЖНИК (рисование) ---- */
+        const w = g.w, h = g.h, jy = g.jumpOff || 0;
+        ctx.strokeStyle = '#263238'; ctx.lineWidth = 10; ctx.lineCap = 'round';
+        ctx.beginPath(); ctx.moveTo(x + 20, g.y - 30 + jy); ctx.lineTo(x + 17 + walk * g.dir, g.y - 2 + jy); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(x + w - 20, g.y - 30 + jy); ctx.lineTo(x + w - 17 - walk * g.dir, g.y - 2 + jy); ctx.stroke();
+        ctx.fillStyle = hurt ? '#ffffff' : '#4a148c';
+        RA.rr(ctx, x + 8, g.y - h + 24 + jy, w - 16, h - 44, 8); ctx.fill();
+        ctx.fillStyle = '#311b92';
+        RA.rr(ctx, x + 8, g.y - h + 44 + jy, w - 16, 10, 4); ctx.fill();
+        ctx.fillStyle = '#37474f';
+        RA.rr(ctx, x - 4, g.y - h + 22 + jy, 16, 16, 5); ctx.fill();
+        RA.rr(ctx, x + w - 12, g.y - h + 22 + jy, 16, 16, 5); ctx.fill();
+        ctx.fillStyle = '#4a148c';
+        ctx.beginPath(); ctx.arc(x + w / 2, g.y - h + 12 + jy, 14, Math.PI, 0); ctx.fill();
+        ctx.fillStyle = '#b71c1c';
+        ctx.fillRect(x + w / 2 - 3, g.y - h - 12 + jy, 6, 18);
+        ctx.fillStyle = '#ff1744';
+        ctx.fillRect(x + w / 2 + 4, g.y - h + 8 + jy, 4, 4);
+        ctx.strokeStyle = '#546e7a'; ctx.lineWidth = 6;
+        ctx.beginPath(); ctx.moveTo(x + w + 6, g.y - 6 + jy); ctx.lineTo(x + w + 16, g.y - h + 24 + jy); ctx.stroke();
+        if (!g.dead) {
+          ctx.fillStyle = 'rgba(0,0,0,.5)';
+          ctx.fillRect(x - 4, g.y - h - 26 + jy, w + 8, 8);
+          ctx.fillStyle = '#ff1744';
+          ctx.fillRect(x - 3, g.y - h - 25 + jy, (w + 6) * Math.max(0, g.hp / (g.maxHp || 12)), 6);
+        }
+      } else if (g.type === 'shadow') {
         /* ---- ниндзя-тень ---- */
         ctx.fillStyle = '#231a3e';
         ctx.beginPath();
@@ -542,15 +604,38 @@ RA.EnemyArrows = {
   throw: function (x, y, vx) {
     this.list.push({ x: x, y: y, vx: vx, vy: 0, t: 0 });
   },
+  throw: function (x, y) {                    // ударная волна босса
+    this.list.push({ x: x, y: y, vx: -390, vy: 0, t: 0, ground: true });
+  },
   update: function (dt, player, game) {
     for (let i = this.list.length - 1; i >= 0; i--) {
       const a = this.list[i];
+      if (a.ground) {
+        a.x += a.vx * dt; a.t += dt;
+        if (Math.random() < dt * 20) {
+          RA.Particles.burst(a.x, a.y + 10, '#8d6e63', 1, { life: 0.35, spread: 20, up: 50 });
+        }
+        if (player.state !== 'dead' && player.invuln <= 0 &&
+            a.x > player.x && a.x < player.x + player.w &&
+            player.y + player.h > a.y - 26) {
+          if (player.shields > 0) {
+            player.shields--;
+            player.invuln = 1.2;
+            game.onShieldHit({ x: a.x, y: a.y + 20, w: 0, h: 0 });
+          } else {
+            game.die('guard');
+          }
+          this.list.splice(i, 1);
+          continue;
+        }
+        if (a.t > 2.4) this.list.splice(i, 1);
+        continue;
+      }
       a.x += a.vx * dt; a.y += a.vy * dt; a.t += dt;
       // столкновение с героем
       if (player.state !== 'dead' && player.invuln <= 0 &&
           a.x > player.x && a.x < player.x + player.w &&
           a.y > player.y && a.y < player.y + player.h) {
-        const stompOk = false;
         if (player.shields > 0) {
           player.shields--;
           player.invuln = 1.2;
@@ -569,7 +654,17 @@ RA.EnemyArrows = {
     for (let i = 0; i < this.list.length; i++) {
       const a = this.list[i];
       const x = a.x - cam;
-      if (x < -30 || x > W + 30) continue;
+      if (x < -40 || x > W + 40) continue;
+      if (a.ground) {
+        // пылевая волна по земле
+        ctx.fillStyle = 'rgba(141,110,99,.7)';
+        for (let k = 0; k < 3; k++) {
+          ctx.beginPath();
+          ctx.ellipse(x + k * 10, a.y + 6 - k * 4, 16 - k * 4, 9 - k * 2.4, 0, 0, 7);
+          ctx.fill();
+        }
+        continue;
+      }
       ctx.save();
       ctx.translate(x, a.y);
       ctx.rotate(Math.atan2(a.vy, a.vx));
