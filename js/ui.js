@@ -311,7 +311,7 @@ RA.UI = (function () {
       const box = el('stage-wrap');
       const req = box.requestFullscreen || box.webkitRequestFullscreen;
       if (!req) {
-        alert('Полноэкранный режим недоступен в этом браузере.\n\nСовет: установи игру как приложение (кнопка 📲) — она откроется на весь экран.');
+        alert('В этом браузере полный экран не поддерживается (Safari на iPhone так не умеет — ограничение Apple).\n\nНа iPhone два способа:\n1) Установи игру: «Поделиться» → «На экран „Домой“» — из иконки она открывается на весь экран;\n2) Играй через Telegram: кнопка 🎮 — при старте полный экран включается сам.');
         return;
       }
       if (!document.fullscreenElement) {
