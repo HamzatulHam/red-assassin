@@ -161,6 +161,8 @@ RA.Game = (function () {
 
   function update(dt) {
     time += dt;
+    updatePetals(dt);
+    updateBirds(dt);
 
     if (state === 'play') {
       speed = Math.min(CFG.player.speedMax, speed + CFG.player.speedGain * dt);
@@ -228,13 +230,22 @@ RA.Game = (function () {
   /* ---------- фон: закат, луна, горы, пагоды, облака ---------- */
 
   function bake() {
+    // печать фона в двойном разрешении — рисуем в логических координатах
+    const S = 2;
     skyC = document.createElement('canvas');
-    skyC.width = CFG.width; skyC.height = CFG.height;
+    skyC.width = CFG.width * S; skyC.height = CFG.height * S;
     const c = skyC.getContext('2d');
+    c.scale(S, S);
     const g = c.createLinearGradient(0, 0, 0, CFG.height);
     g.addColorStop(0, '#1a0c22'); g.addColorStop(0.45, '#5c1f33');
     g.addColorStop(0.75, '#a63c3c'); g.addColorStop(1, '#e8814f');
     c.fillStyle = g; c.fillRect(0, 0, CFG.width, CFG.height);
+    // тёплое зарево над горизонтом
+    const hg = c.createRadialGradient(CFG.width * 0.5, CFG.groundY + 30, 30,
+                                      CFG.width * 0.5, CFG.groundY + 30, 540);
+    hg.addColorStop(0, 'rgba(255,170,110,.45)');
+    hg.addColorStop(1, 'rgba(255,170,110,0)');
+    c.fillStyle = hg; c.fillRect(0, CFG.groundY - 260, CFG.width, 300);
     // звёзды
     for (let i = 0; i < 70; i++) {
       const x = RA.hash(i * 3 + 1) * CFG.width, y = RA.hash(i * 7 + 2) * 220;
@@ -253,6 +264,11 @@ RA.Game = (function () {
     c.beginPath(); c.arc(728, 102, 6, 0, 7); c.fill();
     c.beginPath(); c.arc(752, 120, 4, 0, 7); c.fill();
     c.beginPath(); c.arc(748, 96, 3, 0, 7); c.fill();
+    // дымка у горизонта (глубина)
+    const fog = c.createLinearGradient(0, CFG.groundY - 90, 0, CFG.groundY + 20);
+    fog.addColorStop(0, 'rgba(255,190,150,0)');
+    fog.addColorStop(1, 'rgba(255,190,150,.22)');
+    c.fillStyle = fog; c.fillRect(0, CFG.groundY - 90, CFG.width, 110);
 
     // виньетка
     vinC = document.createElement('canvas');
@@ -267,6 +283,8 @@ RA.Game = (function () {
     pitGrad = ctx.createLinearGradient(0, CFG.groundY + 40, 0, CFG.height);
     pitGrad.addColorStop(0, 'rgba(15,3,6,0)');
     pitGrad.addColorStop(1, 'rgba(12,2,5,.9)');
+
+    initLanterns(); initBirds(); initPetals();
   }
 
   function drawClouds() {
@@ -284,6 +302,18 @@ RA.Game = (function () {
   }
 
   function drawMountains() {
+    // дальний хребет — светлее (атмосферная перспектива = глубина)
+    const off2 = camX * 0.12, p2 = 520, b2 = CFG.groundY + 12;
+    const j0 = Math.floor(off2 / p2) - 1;
+    ctx.fillStyle = '#6b2438';
+    for (let i = j0; i < j0 + Math.ceil(CFG.width / p2) + 3; i++) {
+      const bx = i * p2 - off2;
+      const h = 150 + RA.hash(i * 5 + 2) * 90;
+      ctx.beginPath();
+      ctx.moveTo(bx, b2); ctx.lineTo(bx + p2 / 2, b2 - h); ctx.lineTo(bx + p2, b2);
+      ctx.closePath(); ctx.fill();
+    }
+    // ближний хребет
     const off = camX * 0.22, period = 320, baseY = CFG.groundY + 12;
     const i0 = Math.floor(off / period) - 1;
     ctx.fillStyle = '#4a1626';
@@ -296,6 +326,99 @@ RA.Game = (function () {
       ctx.lineTo(bx + 320, baseY);
       ctx.closePath(); ctx.fill();
     }
+  }
+
+  /* ---------- фонари, птицы и лепестки (живой фон) ---------- */
+
+  let lanterns = [], birds = [], petals = [];
+
+  function initLanterns() {
+    lanterns = [];
+    for (let i = 0; i < 8; i++) {
+      lanterns.push({
+        x0: i * 430 + RA.hash(i * 3) * 220,
+        y: 80 + RA.hash(i * 7) * 150,
+        ph: RA.hash(i) * 6.3,
+        s: 0.8 + RA.hash(i * 11) * 0.5
+      });
+    }
+  }
+
+  function drawLanterns() {
+    const span = 3440, off = camX * 0.35;
+    for (let i = 0; i < lanterns.length; i++) {
+      const l = lanterns[i];
+      let sx = ((l.x0 - off) % span + span) % span - 60;
+      if (sx > CFG.width + 60) continue;
+      const sy = l.y + Math.sin(time * 0.8 + l.ph) * 8;
+      const s = l.s;
+      ctx.fillStyle = 'rgba(255,150,60,.16)';                    // тёплое свечение
+      ctx.beginPath(); ctx.arc(sx, sy, 15 * s, 0, 7); ctx.fill();
+      ctx.fillStyle = '#ff9d3c';                                 // корпус
+      RA.rr(ctx, sx - 5 * s, sy - 7 * s, 10 * s, 14 * s, 4 * s); ctx.fill();
+      ctx.fillStyle = '#ffd9a0';                                 // огонёк
+      ctx.beginPath(); ctx.arc(sx, sy, 2.6 * s, 0, 7); ctx.fill();
+    }
+  }
+
+  function initBirds() {
+    birds = [];
+    for (let i = 0; i < 4; i++) {
+      birds.push({ x: Math.random() * CFG.width, y: 60 + Math.random() * 130, v: 12 + Math.random() * 14, ph: Math.random() * 6 });
+    }
+  }
+  function updateBirds(dt) {
+    for (let i = 0; i < birds.length; i++) {
+      const b = birds[i];
+      b.x -= b.v * dt; b.ph += dt * 7;
+      if (b.x < -30) { b.x = CFG.width + 30; b.y = 60 + Math.random() * 130; }
+    }
+  }
+  function drawBirds() {
+    ctx.strokeStyle = 'rgba(40,10,25,.55)'; ctx.lineWidth = 2; ctx.lineCap = 'round';
+    for (let i = 0; i < birds.length; i++) {
+      const b = birds[i], f = Math.sin(b.ph) * 4;
+      ctx.beginPath();
+      ctx.moveTo(b.x - 6, b.y - f);
+      ctx.quadraticCurveTo(b.x, b.y + 3, b.x + 6, b.y - f);
+      ctx.stroke();
+    }
+  }
+
+  function newPetal(anywhere) {
+    return {
+      x: Math.random() * CFG.width,
+      y: anywhere ? Math.random() * CFG.height : -8 - Math.random() * 30,
+      vx: -(14 + Math.random() * 26), vy: 16 + Math.random() * 24,
+      r: Math.random() * 6.3, vr: (Math.random() - 0.5) * 3,
+      s: 1.6 + Math.random() * 2.2, o: 0.2 + Math.random() * 0.35
+    };
+  }
+  function initPetals() {
+    petals = [];
+    for (let i = 0; i < 30; i++) petals.push(newPetal(true));
+  }
+  function updatePetals(dt) {
+    for (let i = 0; i < petals.length; i++) {
+      const p = petals[i];
+      p.x += p.vx * dt; p.y += p.vy * dt; p.r += p.vr * dt;
+      if (p.y > CFG.height + 8 || p.x < -8) {
+        p.x = CFG.width * (0.25 + Math.random() * 0.85);
+        p.y = -8 - Math.random() * 30;
+      }
+    }
+  }
+  function drawPetals() {
+    ctx.fillStyle = '#ffc7d4';
+    for (let i = 0; i < petals.length; i++) {
+      const p = petals[i];
+      ctx.globalAlpha = p.o;
+      ctx.save();
+      ctx.translate(p.x, p.y); ctx.rotate(p.r);
+      ctx.beginPath(); ctx.ellipse(0, 0, p.s, p.s * 0.55, 0, 0, 7); ctx.fill();
+      ctx.restore();
+    }
+    ctx.globalAlpha = 1;
   }
 
   function drawPagodas() {
@@ -326,10 +449,12 @@ RA.Game = (function () {
   /* ---------- отрисовка кадра ---------- */
 
   function draw() {
-    ctx.drawImage(skyC, 0, 0);
+    ctx.drawImage(skyC, 0, 0, CFG.width, CFG.height);
     drawClouds();
     drawMountains();
     drawPagodas();
+    drawLanterns();
+    drawBirds();
     ctx.fillStyle = pitGrad;
     ctx.fillRect(0, CFG.groundY + 40, CFG.width, CFG.height - CFG.groundY - 40);
 
@@ -347,6 +472,7 @@ RA.Game = (function () {
     RA.Particles.draw(ctx, camX);
     ctx.restore();
 
+    drawPetals();                    // лепестки на переднем плане — глубина
     ctx.drawImage(vinC, 0, 0);
   }
 
@@ -422,6 +548,11 @@ RA.Game = (function () {
     }
     canvas = document.getElementById('game');
     ctx = canvas.getContext('2d');
+    // рендер в двойном разрешении: чёткая картинка на современных экранах
+    const dpr = Math.min(2, window.devicePixelRatio || 1);
+    canvas.width = CFG.width * dpr;
+    canvas.height = CFG.height * dpr;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     bake();
     bindInput();
     RA.World.reset();
