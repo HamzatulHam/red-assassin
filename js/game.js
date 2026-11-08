@@ -347,6 +347,10 @@ RA.Game = (function () {
       }
     }
     flash = Math.max(0, flash - dt * 2.4);
+    // затухания — должны идти во ВСЕХ режимах (в дуэли есть ранний return)
+    RA.Particles.update(dt);
+    comboT = Math.max(0, comboT - dt);
+    shake = Math.max(0, shake - dt * 26);
 
     if (state === 'play') {
       if (mode === 'duel') { updateDuel(dt); return; }
@@ -407,10 +411,6 @@ RA.Game = (function () {
         RA.UI.setPlaying(false);
       }
     }
-
-    RA.Particles.update(dt);
-    comboT = Math.max(0, comboT - dt);
-    shake = Math.max(0, shake - dt * 26);
 
     if (state === 'play') {
       // достижения
