@@ -410,7 +410,10 @@ h2 { margin: 26px 0 12px; }
 
 /* рывок и тост достижений */
 #btn-dash {
-  position: absolute; right: 18px; bottom: 78px; z-index: 4;
+  position: absolute;
+  left: calc(14px + env(safe-area-inset-left, 0px));
+  bottom: calc(14px + env(safe-area-inset-bottom, 0px));
+  z-index: 4;
   width: 48px; height: 48px; border-radius: 50%;
   border: 2px solid rgba(144, 202, 249, .5);
   background: rgba(10, 20, 30, .55); color: #90caf9;
