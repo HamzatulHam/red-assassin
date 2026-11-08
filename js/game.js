@@ -375,7 +375,9 @@ RA.Game = (function () {
       if (wcd > 0) wcd -= dt;
 
       const target = RA.Player.p.x - 260;
-      camX += (target - camX) * Math.min(1, dt * 7);
+      // в рывке камера жёстко держит героя (без отставания и «обгона»)
+      if (RA.Player.p.dashT > 0) camX = target;
+      else camX += (target - camX) * Math.min(1, dt * 9);
 
       // цель кампании
       if (mode === 'campaign' && dist >= campaign.goal) { onVictory(); return; }
