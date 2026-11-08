@@ -32,12 +32,16 @@ RA.UI = (function () {
     } catch (e) { return false; }
   };
 
-  // во время игры в панели остаются только звук/кошелёк/полный экран
+  // во время игры ИЛИ в полноэкранном режиме в панели остаются только звук/кошелёк/полный экран
+  const isFullscreen = function () {
+    return !!(document.fullscreenElement || document.webkitFullscreenElement);
+  };
   const applyBarVisibility = function () {
     const dl = el('dl-btn'), inst = el('install-btn');
     if (!dl || !inst) return;
-    dl.classList.toggle('hidden', playing);
-    inst.classList.toggle('hidden', playing || isStandalone() || inTelegram());
+    const hide = playing || isFullscreen();
+    dl.classList.toggle('hidden', hide);
+    inst.classList.toggle('hidden', hide || isStandalone() || inTelegram());
   };
 
   // вызывается из game.js при старте/конце забега
@@ -308,7 +312,17 @@ RA.UI = (function () {
         return;
       }
       if (!document.fullscreenElement) {
-        req.call(box);
+        const p = req.call(box);
+        // на телефоне пробуем закрепить горизонтальную ориентацию
+        if (p && p.then) {
+          p.then(function () {
+            try {
+              if (window.screen && screen.orientation && screen.orientation.lock) {
+                screen.orientation.lock('landscape').catch(function () {});
+              }
+            } catch (e) {}
+          }).catch(function () {});
+        }
       } else {
         (document.exitFullscreen || document.webkitExitFullscreen || function () {}).call(document);
       }
@@ -317,6 +331,7 @@ RA.UI = (function () {
       fsBtn.textContent = document.fullscreenElement
         ? T().fullscreenOff
         : T().fullscreen;
+      applyBarVisibility();
     });
 
     /* ---------- установка как приложение (PWA) ---------- */
@@ -354,6 +369,18 @@ RA.UI = (function () {
     });
 
     applyBarVisibility();
+
+    /* ---------- подсказка «поверни телефон» на вертикальных экранах ---------- */
+    const rotateHint = el('rotate-hint');
+    const updateRotateHint = function () {
+      if (!rotateHint) return;
+      const coarse = window.matchMedia('(pointer: coarse)').matches;   // тач-экран
+      const portrait = window.matchMedia('(orientation: portrait)').matches;
+      rotateHint.classList.toggle('hidden', !(coarse && portrait));
+    };
+    window.addEventListener('resize', updateRotateHint);
+    window.addEventListener('orientationchange', updateRotateHint);
+    updateRotateHint();
   }
 
   function init() {
