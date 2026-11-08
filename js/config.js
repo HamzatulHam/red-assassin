@@ -92,12 +92,13 @@ RA.CONFIG = {
       { id: 'shuriken', name: 'Сюрикен',    price: 400, desc: 'Быстрый бросок (X). Пробивает всех на пути', cooldown: 0.45, speed: 950, pierce: true }
     ],
 
-    // Прокачка: цена уровня = base × step^текущий_уровень
+    // Прокачка: цена уровня = base × step^текущий_уровень.
+    // effect(lvl) — что даёт уровень (показывается в магазине)
     upgrades: [
-      { id: 'jump',   name: 'Прыгучесть', max: 5, base: 50,  step: 1.6, desc: '+4% к силе прыжка за уровень' },
-      { id: 'shield', name: 'Щиты',       max: 3, base: 120, step: 2.0, desc: '+1 щит за забег: спасает от стражника' },
-      { id: 'magnet', name: 'Магнит',     max: 5, base: 80,  step: 1.7, desc: 'Золото притягивается издалека' },
-      { id: 'wallet', name: 'Кошелёк',    max: 5, base: 60,  step: 1.6, desc: '+10% золота в кошелёк за уровень' }
+      { id: 'jump',   name: 'Прыгучесть', max: 5, base: 50,  step: 1.6, desc: 'Прыжок выше', effect: function (lvl) { return '+' + (lvl * 5) + '% к силе прыжка'; } },
+      { id: 'shield', name: 'Щиты',       max: 3, base: 120, step: 2.0, desc: 'Спасают от стражника', effect: function (lvl) { return lvl + ' щит' + (lvl === 1 ? '' : 'а') + ' на забег'; } },
+      { id: 'magnet', name: 'Магнит',     max: 5, base: 80,  step: 1.7, desc: 'Золото само летит к герою', effect: function (lvl) { return 'радиус ' + (45 + 30 * lvl) + ' px'; } },
+      { id: 'wallet', name: 'Кошелёк',    max: 5, base: 60,  step: 1.6, desc: 'Доход с каждого мешочка', effect: function (lvl) { return '+' + (lvl * 10) + '% золота'; } }
     ]
   },
 
