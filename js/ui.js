@@ -109,9 +109,10 @@ RA.UI = (function () {
     el('tab-weapons').textContent = S2.tabWeapons;
     el('tab-upg').textContent = S2.tabUpg;
     const labels = el('ov-over').querySelectorAll('.stat span');
-    if (labels.length === 4) {
-      labels[0].textContent = L.score; labels[1].textContent = L.coins;
-      labels[2].textContent = L.dist; labels[3].textContent = L.best;
+    if (labels.length === 5) {
+      labels[0].textContent = L.score; labels[1].textContent = 'Враги';
+      labels[2].textContent = L.coins;
+      labels[3].textContent = L.dist; labels[4].textContent = L.best;
     }
   }
 
@@ -126,12 +127,21 @@ RA.UI = (function () {
     el('menu-best').textContent = best > 0 ? T().labels.best + ': ' + best : '';
   }
 
+  function toast(text) {
+    const t = el('toast');
+    t.textContent = text;
+    t.classList.add('show');
+    clearTimeout(toast._t);
+    toast._t = setTimeout(function () { t.classList.remove('show'); }, 2800);
+  }
+
   function gameOver(d) {
     el('over-title').textContent = d.title;
     el('st-score').textContent = d.score;
     el('st-coins').textContent = d.coins;
     el('st-dist').textContent = d.dist + ' м';
     el('st-best').textContent = d.best;
+    el('st-kills').textContent = d.kills || 0;
     el('over-record').classList.toggle('hidden', !d.record);
     el('over-wallet').textContent = d.toWallet > 0 ? S().toWallet + ': +' + d.toWallet + ' 💰' : '';
     el('btn-map').classList.toggle('hidden', !d.campaign);
@@ -481,6 +491,7 @@ RA.UI = (function () {
     setWallet: setWallet,
     setPlaying: setPlaying,
     setDuelHUD: setDuelHUD,
+    toast: toast,
     banner: function (text) {
       const b = el('banner');
       b.textContent = text;
