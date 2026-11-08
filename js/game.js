@@ -32,6 +32,7 @@ RA.Game = (function () {
   // дуэль
   let duel = { p1: null, p2: null, s1: 0, s2: 0, phase: 'fight', timer: 0, winner: 0 };
   let duelKeys = { a: 0, d: 0, s: 0, left: 0, right: 0, up: 0, down: 0 };
+  let duelTouch = { p1left: 0, p1right: 0, p2left: 0, p2right: 0 };
 
   // босс, достижения, серия
   let nextBossDist = 1200, bossActive = false;
@@ -175,6 +176,7 @@ RA.Game = (function () {
     RA.UI.hideOverlays();
     RA.UI.setPlaying(true);
     RA.UI.setDuelHUD(true);
+    RA.UI.setDuelTouch(true);
     RA.Sound.ensure();
   }
 
@@ -461,8 +463,8 @@ RA.Game = (function () {
 
   function updateDuel(dt) {
     // управление игроков
-    duel.p1.p.dir = (duelKeys.a ? -1 : 0) + (duelKeys.d ? 1 : 0);
-    duel.p2.p.dir = (duelKeys.left ? -1 : 0) + (duelKeys.right ? 1 : 0);
+    duel.p1.p.dir = ((duelKeys.a || duelTouch.p1left) ? -1 : 0) + ((duelKeys.d || duelTouch.p1right) ? 1 : 0);
+    duel.p2.p.dir = ((duelKeys.left || duelTouch.p2left) ? -1 : 0) + ((duelKeys.right || duelTouch.p2right) ? 1 : 0);
 
     duel.p1.update(dt, api);
     duel.p2.update(dt, api);
@@ -478,6 +480,7 @@ RA.Game = (function () {
           RA.UI.showDuelEnd(duel.winner, duel.s1, duel.s2);
           state = 'duel-end';
           RA.UI.setPlaying(false);
+          RA.UI.setDuelTouch(false);
         } else {
           resetRound();
         }
@@ -939,6 +942,37 @@ RA.Game = (function () {
     return ['KeyA', 'KeyD', 'KeyS', 'ArrowLeft', 'ArrowRight', 'ArrowDown'].indexOf(e.code) !== -1;
   }
 
+  function bindDuelTouch() {
+    const wrap = document.getElementById('duel-touch');
+    if (!wrap) return;
+    wrap.querySelectorAll('.dt-btn').forEach(function (b) {
+      const pk = b.getAttribute('data-p'), k = b.getAttribute('data-k');
+      const isMove = k === 'left' || k === 'right';
+      const setMove = function (v) {
+        const key = 'p' + pk + k;
+        duelTouch[key] = v;
+      };
+      b.addEventListener('pointerdown', function (e) {
+        e.preventDefault();
+        RA.Sound.ensure();
+        if (state !== 'play' || duel.phase !== 'fight') return;
+        if (isMove) { setMove(1); return; }
+        if (k === 'jump') {
+          (pk === '1' ? duel.p1 : duel.p2).tryJump();
+        } else if (k === 'fire') {
+          duelThrow(pk === '1' ? duel.p1 : duel.p2, pk === '1' ? duel.p2 : duel.p1);
+        }
+      });
+      const end = function (e) {
+        e.preventDefault();
+        if (isMove) setMove(0);
+      };
+      b.addEventListener('pointerup', end);
+      b.addEventListener('pointercancel', end);
+      b.addEventListener('pointerleave', end);
+    });
+  }
+
   function bindInput() {
     window.addEventListener('keydown', function (e) {
       if (isJumpKey(e)) {
@@ -1027,6 +1061,7 @@ RA.Game = (function () {
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     bake();
     bindInput();
+    bindDuelTouch();
     RA.World.reset();
     RA.Player.reset();
     pal = resolvePal(palTo);
@@ -1044,6 +1079,7 @@ RA.Game = (function () {
     RA.Player.reset();
     camX = -100;
     RA.UI.setDuelHUD(false);
+    RA.UI.setDuelTouch(false);
     RA.UI.setPlaying(false);
     RA.UI.showMenu(best);
   }
