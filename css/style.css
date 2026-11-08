@@ -197,6 +197,16 @@ h2 { margin: 26px 0 12px; }
 }
 #btn-throw:active { transform: scale(.92); }
 
+/* подсказка повернуть телефон (вертикальные тач-экраны) */
+#rotate-hint {
+  position: absolute; inset: 0; z-index: 6;
+  background: rgba(12, 6, 10, .93); color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  text-align: center; font-size: 22px; font-weight: 800;
+  line-height: 1.7; pointer-events: none;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, .6);
+}
+
 #ov-shop { justify-content: flex-start; gap: 10px; padding: 16px 22px; }
 .shop-head { display: flex; align-items: center; gap: 14px; width: 100%; }
 .shop-head h2 { margin: 0; font-size: 26px; letter-spacing: 1px; }
