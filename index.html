@@ -1,51 +1,51 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<meta name="description" content="РљСЂР°СЃРЅС‹Р№ Р°СЃР°СЃРёРЅ вЂ” Р±РµСЃРїР»Р°С‚РЅР°СЏ РѕРЅР»Р°Р№РЅ-РёРіСЂР° СЂР°РЅРЅРµСЂ: Р±РµРіРё, Р»Р°Р·Р°Р№ РїРѕ СЃС‚РµРЅР°Рј, СЃРѕР±РёСЂР°Р№ Р·РѕР»РѕС‚Рѕ Рё РЅРµ РїРѕРїР°РґРёСЃСЊ Р·Р°РєРѕРЅСѓ.">
-<title>РљСЂР°СЃРЅС‹Р№ Р°СЃР°СЃРёРЅ вЂ” РёРіСЂР°С‚СЊ РѕРЅР»Р°Р№РЅ</title>
-<!-- Telegram Mini App: РµСЃР»Рё РёРіСЂР° РѕС‚РєСЂС‹С‚Р° РІ Telegram вЂ” РїРѕР»СѓС‡Р°РµРј РµРіРѕ API -->
+<meta name="description" content="Красный асасин — бесплатная онлайн-игра раннер: беги, лазай по стенам, собирай золото и не попадись закону.">
+<title>Красный асасин — играть онлайн</title>
+<!-- Telegram Mini App: если игра открыта в Telegram — получаем его API -->
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
-<!-- PWA: СѓСЃС‚Р°РЅРѕРІРєР° РЅР° С‚РµР»РµС„РѕРЅ (Android/iPhone), РѕС„Р»Р°Р№РЅ-СЂРµР¶РёРј -->
+<!-- PWA: установка на телефон (Android/iPhone), офлайн-режим -->
 <link rel="manifest" href="manifest.webmanifest?v=6">
 <meta name="theme-color" content="#7f1414">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="РђСЃР°СЃРёРЅ">
+<meta name="apple-mobile-web-app-title" content="Асасин">
 <link rel="apple-touch-icon" href="icon-192.png">
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
-<!-- ?v=6 вЂ” РІРµСЂСЃРёСЏ С„Р°Р№Р»РѕРІ: РїСЂРё РѕР±РЅРѕРІР»РµРЅРёРё РёРіСЂС‹ РїРѕРґРЅРёРјР°Р№ РµС‘, С‡С‚РѕР±С‹ РєСЌС€ РЅРµ РјРµС€Р°Р» -->
+<!-- ?v=6 — версия файлов: при обновлении игры поднимай её, чтобы кэш не мешал -->
 <link rel="stylesheet" href="css/style.css?v=6">
 </head>
 <body>
 
 <header class="site-header">
   <div class="wrap header-in">
-    <a class="logo" href="#">рџЋ® РР“Р Р« <b>РћРќР›РђР™Рќ</b></a>
+    <a class="logo" href="#">🎮 ИГРЫ <b>ОНЛАЙН</b></a>
     <nav>
-      <a href="#">РџРѕРїСѓР»СЏСЂРЅС‹Рµ</a>
-      <a href="#">РќРѕРІРёРЅРєРё</a>
-      <a href="#">РРіСЂС‹ РђСЃСЃР°СЃРёРЅ</a>
+      <a href="#">Популярные</a>
+      <a href="#">Новинки</a>
+      <a href="#">Игры Ассасин</a>
     </nav>
   </div>
 </header>
 
 <main class="wrap">
-  <p class="crumbs">Р Р°Р·РґРµР»: <a href="#">РРіСЂС‹ РђСЃСЃР°СЃРёРЅ</a></p>
-  <h1>РљСЂР°СЃРЅС‹Р№ Р°СЃР°СЃРёРЅ</h1>
+  <p class="crumbs">Раздел: <a href="#">Игры Ассасин</a></p>
+  <h1>Красный асасин</h1>
 
   <div id="stage-wrap">
     <div id="stage-bar">
       <span class="bar-left">
-        <span id="sound-state" title="Р—РІСѓРє (M)">рџ”Љ</span>
-        <span id="bar-wallet" title="РљРѕС€РµР»С‘Рє">рџ’° 0</span>
+        <span id="sound-state" title="Звук (M)">🔊</span>
+        <span id="bar-wallet" title="Кошелёк">💰 0</span>
       </span>
       <span class="bar-right">
-        <button id="install-btn" class="bar-install hidden" type="button" title="РЈСЃС‚Р°РЅРѕРІРёС‚СЊ РєР°Рє РїСЂРёР»РѕР¶РµРЅРёРµ">рџ“І РЈСЃС‚Р°РЅРѕРІРёС‚СЊ</button>
-        <a id="dl-btn" class="bar-dl" href="red-assassin.zip" download="krasnyj-asasin.zip" title="РЎРєР°С‡Р°С‚СЊ РёРіСЂСѓ Р°СЂС…РёРІРѕРј РЅР° РєРѕРјРїСЊСЋС‚РµСЂ">в¬‡пёЏ РЎРєР°С‡Р°С‚СЊ</a>
-        <button id="fs-btn" type="button">в›¶ РРіСЂР°С‚СЊ РЅР° РІРµСЃСЊ СЌРєСЂР°РЅ</button>
+        <button id="install-btn" class="bar-install hidden" type="button" title="Установить как приложение">📲 Установить</button>
+        <a id="dl-btn" class="bar-dl" href="red-assassin.zip" download="krasnyj-asasin.zip" title="Скачать игру архивом на компьютер">⬇️ Скачать</a>
+        <button id="fs-btn" type="button">⛶ Играть на весь экран</button>
       </span>
     </div>
     <div id="stage">
@@ -53,15 +53,15 @@
 
       <div id="hud"></div>
       <div id="banner"></div>
-      <button id="btn-throw" type="button" title="Р‘СЂРѕСЃРёС‚СЊ РѕСЂСѓР¶РёРµ (X)">рџЋЇ</button>
-      <div id="rotate-hint"><span>рџ”„ Р”РµСЂР¶Рё С‚РµР»РµС„РѕРЅ РіРѕСЂРёР·РѕРЅС‚Р°Р»СЊРЅРѕ</span><button id="rotate-close" type="button" title="РќРµ РїРѕРІРѕСЂР°С‡РёРІР°С‚СЊ">вњ•</button></div>
+      <button id="btn-throw" type="button" title="Бросить оружие (X)">🎯</button>
+      <div id="rotate-hint"><span>🔄 Держи телефон горизонтально</span><button id="rotate-close" type="button" title="Не поворачивать">✕</button></div>
 
       <div class="overlay" id="ov-menu">
-        <h2 class="game-title">РљР РђРЎРќР«Р™<br>РђРЎРђРЎРЎРРќ</h2>
+        <h2 class="game-title">КРАСНЫЙ<br>АСАССИН</h2>
         <p class="ov-sub" id="menu-sub"></p>
         <div class="menu-btns">
-          <button class="btn-primary" id="btn-start" type="button">в–¶ РРіСЂР°С‚СЊ</button>
-          <button class="btn-secondary" id="btn-shop" type="button">рџ›’ РњР°РіР°Р·РёРЅ</button>
+          <button class="btn-primary" id="btn-start" type="button">▶ Играть</button>
+          <button class="btn-secondary" id="btn-shop" type="button">🛒 Магазин</button>
         </div>
         <p class="ov-hint" id="menu-controls"></p>
         <p class="ov-best" id="menu-best"></p>
@@ -70,37 +70,37 @@
       <div class="overlay hidden" id="ov-over">
         <h2 class="over-title" id="over-title"></h2>
         <div class="stats">
-          <div class="stat"><span>РћС‡РєРё</span><b id="st-score">0</b></div>
-          <div class="stat"><span>Р—РѕР»РѕС‚Рѕ</span><b id="st-coins">0</b></div>
-          <div class="stat"><span>Р”РёСЃС‚Р°РЅС†РёСЏ</span><b id="st-dist">0</b></div>
-          <div class="stat"><span>Р РµРєРѕСЂРґ</span><b id="st-best">0</b></div>
+          <div class="stat"><span>Очки</span><b id="st-score">0</b></div>
+          <div class="stat"><span>Золото</span><b id="st-coins">0</b></div>
+          <div class="stat"><span>Дистанция</span><b id="st-dist">0</b></div>
+          <div class="stat"><span>Рекорд</span><b id="st-best">0</b></div>
         </div>
-        <p id="over-record" class="record hidden">рџЋ‰ РќРѕРІС‹Р№ СЂРµРєРѕСЂРґ!</p>
+        <p id="over-record" class="record hidden">🎉 Новый рекорд!</p>
         <p id="over-wallet" class="ov-best"></p>
         <div class="menu-btns">
-          <button class="btn-primary" id="btn-restart" type="button">в†» Р•С‰С‘ СЂР°Р·</button>
-          <button class="btn-secondary" id="btn-shop2" type="button">рџ›’ РњР°РіР°Р·РёРЅ</button>
+          <button class="btn-primary" id="btn-restart" type="button">↻ Ещё раз</button>
+          <button class="btn-secondary" id="btn-shop2" type="button">🛒 Магазин</button>
         </div>
-        <p class="ov-hint">РёР»Рё РЅР°Р¶РјРёС‚Рµ РџР РћР‘Р•Р›</p>
+        <p class="ov-hint">или нажмите ПРОБЕЛ</p>
       </div>
 
       <div class="overlay hidden" id="ov-shop">
         <div class="shop-head">
-          <h2>рџ›’ РњРђР“РђР—РРќ</h2>
-          <span id="shop-wallet">рџ’° 0</span>
-          <button id="btn-shop-close" class="btn-x" type="button" title="Р—Р°РєСЂС‹С‚СЊ">вњ•</button>
+          <h2>🛒 МАГАЗИН</h2>
+          <span id="shop-wallet">💰 0</span>
+          <button id="btn-shop-close" class="btn-x" type="button" title="Закрыть">✕</button>
         </div>
         <div class="shop-tabs">
-          <button id="tab-skins" type="button">РљРѕСЃС‚СЋРјС‹</button>
-          <button id="tab-weapons" type="button">РћСЂСѓР¶РёРµ</button>
-          <button id="tab-upg" type="button">РџСЂРѕРєР°С‡РєР°</button>
+          <button id="tab-skins" type="button">Костюмы</button>
+          <button id="tab-weapons" type="button">Оружие</button>
+          <button id="tab-upg" type="button">Прокачка</button>
         </div>
         <div id="shop-items" class="shop-items"></div>
         <p id="shop-msg" class="shop-msg"></p>
       </div>
 
       <div class="overlay hidden" id="ov-pause">
-        <h2>РџРђРЈР—Рђ</h2>
+        <h2>ПАУЗА</h2>
         <p class="ov-hint"></p>
       </div>
     </div>
@@ -109,37 +109,37 @@
   <div class="rating">
     <span id="stars"></span>
     <span id="rating-info"></span>
-    <span class="rate-hint">вЂ” РїРѕСЃС‚Р°РІСЊС‚Рµ СЃРІРѕСЋ РѕС†РµРЅРєСѓ!</span>
+    <span class="rate-hint">— поставьте свою оценку!</span>
   </div>
 
   <section class="desc">
-    <p><b>РљСЂР°СЃРЅС‹Р№ Р°СЃР°СЃРёРЅ</b> вЂ” РґРёРЅР°РјРёС‡РЅС‹Р№ СЂР°РЅРЅРµСЂ, РІ РєРѕС‚РѕСЂРѕРј СЌРєСЂР°РЅ РЅРµ РѕСЃС‚Р°РЅР°РІР»РёРІР°РµС‚СЃСЏ РЅРё РЅР°
-    СЃРµРєСѓРЅРґСѓ. Р’С‹ РёРіСЂР°РµС‚Рµ Р·Р° РЅРёРЅРґР·СЏ РІ РєСЂР°СЃРЅРѕРј РєРѕСЃС‚СЋРјРµ: РїРµСЂРµРїСЂС‹РіРёРІР°Р№С‚Рµ РѕРіСЂРѕРјРЅС‹Рµ РѕРІСЂР°РіРё,
-    Р·Р°РїСЂС‹РіРёРІР°Р№С‚Рµ РЅР° РІРѕСЂРѕС‚Р° Рё Р±Р°С€РЅРё, РєР°СЂР°Р±РєР°Р№С‚РµСЃСЊ РїРѕ СЃС‚РµРЅР°Рј Рё РЅРµ РїРѕРїР°РґР°Р№С‚РµСЃСЊ РІ СЂСѓРєРё Р·Р°РєРѕРЅСѓ.</p>
-    <p>РџРѕ РїСѓС‚Рё СЃРѕР±РёСЂР°Р№С‚Рµ РјРµС€РѕС‡РєРё СЃ Р·РѕР»РѕС‚С‹РјРё РјРѕРЅРµС‚Р°РјРё, Р° РµСЃР»Рё СЃС‚СЂР°Р¶РЅРёРє СЃС‚РѕРёС‚ СЃР»РёС€РєРѕРј Р±Р»РёР·РєРѕ вЂ”
-    РїСЂС‹РіРЅРёС‚Рµ РµРјСѓ РЅР° РіРѕР»РѕРІСѓ Рё РѕР±РµР·РІСЂРµРґСЊС‚Рµ! РЎРєРѕСЂРѕСЃС‚СЊ СЂР°СЃС‚С‘С‚ СЃ РєР°Р¶РґС‹Рј СѓСЂРѕРІРЅРµРј. РРіСЂР°
-    СЃРѕРІРµСЂС€РµРЅРЅРѕ Р±РµР·РІСЂРµРґРЅР°СЏ Рё РЅРµ РЅРµСЃС‘С‚ РЅРёРєР°РєРѕРіРѕ РґСѓСЂРЅРѕРіРѕ С…Р°СЂР°РєС‚РµСЂР° вЂ” С‚РѕР»СЊРєРѕ Р»РѕРІРєРѕСЃС‚СЊ,
-    СЂРµР°РєС†РёСЏ Рё РјРЅРѕРіРѕ Р·РѕР»РѕС‚Р°. РРіСЂР°Р№С‚Рµ Р±РµСЃРїР»Р°С‚РЅРѕ РїСЂСЏРјРѕ РІ Р±СЂР°СѓР·РµСЂРµ!</p>
+    <p><b>Красный асасин</b> — динамичный раннер, в котором экран не останавливается ни на
+    секунду. Вы играете за ниндзя в красном костюме: перепрыгивайте огромные овраги,
+    запрыгивайте на ворота и башни, карабкайтесь по стенам и не попадайтесь в руки закону.</p>
+    <p>По пути собирайте мешочки с золотыми монетами, а если стражник стоит слишком близко —
+    прыгните ему на голову или метните кунай! Скорость растёт с каждым уровнем. Игра
+    совершенно безвредная и не несёт никакого дурного характера — только ловкость,
+    реакция и много золота. Играйте бесплатно прямо в браузере!</p>
   </section>
 
   <section class="similar">
-    <h2>РџРѕС…РѕР¶РёРµ РёРіСЂС‹</h2>
+    <h2>Похожие игры</h2>
     <div class="cards">
       <a class="card" href="#">
-        <div class="thumb t1">рџЏЋпёЏ</div><b>РЎСѓРїРµСЂР±С‹СЃС‚СЂС‹Р№ РєР°СЂ</b><span>Р“РѕРЅРєРё</span>
+        <div class="thumb t1">🏎️</div><b>Супербыстрый кар</b><span>Гонки</span>
       </a>
       <a class="card" href="#">
-        <div class="thumb t2">рџђ±</div><b>РљРёС‚Рё РІ РјРёСЂРµ РјРѕРґС‹</b><span>Р”Р»СЏ РґРµРІРѕС‡РµРє</span>
+        <div class="thumb t2">🐱</div><b>Кити в мире моды</b><span>Для девочек</span>
       </a>
       <a class="card" href="#">
-        <div class="thumb t3">рџЋѓ</div><b>РҐСЌР»Р»РѕСѓРёРЅСЃРєРёР№ РјР°РґР¶РѕРЅРі</b><span>Р›РѕРіРёС‡РµСЃРєРёРµ</span>
+        <div class="thumb t3">🎃</div><b>Хэллоуинский маджонг</b><span>Логические</span>
       </a>
     </div>
   </section>
 </main>
 
 <footer class="site-footer">
-  <div class="wrap">РЈС‡РµР±РЅР°СЏ РґРµРјРѕ-СЃС‚СЂР°РЅРёС†Р° РІ СЃС‚РёР»Рµ РёРіСЂРѕРІС‹С… РїРѕСЂС‚Р°Р»РѕРІ. РљРѕРґ РѕС‚РєСЂС‹С‚ вЂ” РјРµРЅСЏР№С‚Рµ С‡С‚Рѕ С…РѕС‚РёС‚Рµ!</div>
+  <div class="wrap">Учебная демо-страница в стиле игровых порталов. Код открыт — меняйте что хотите!</div>
 </footer>
 
 <script src="js/config.js?v=6"></script>
@@ -150,7 +150,7 @@
 <script src="js/game.js?v=6"></script>
 <script src="js/ui.js?v=6"></script>
 <script>
-// PWA: СЂРµРіРёСЃС‚СЂР°С†РёСЏ РѕС„Р»Р°Р№РЅ-РєСЌС€Р° (РїРѕСЃР»Рµ РїРµСЂРІРѕРіРѕ РѕС‚РєСЂС‹С‚РёСЏ РёРіСЂР° СЂР°Р±РѕС‚Р°РµС‚ Р±РµР· СЃРµС‚Рё)
+// PWA: регистрация офлайн-кэша (после первого открытия игра работает без сети)
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function () {
     navigator.serviceWorker.register('sw.js?v=6').catch(function () {});
