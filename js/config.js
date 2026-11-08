@@ -27,6 +27,9 @@ RA.CONFIG = {
     jump2V: 680,
     holdAssist: 0.75,     // удержание кнопки = прыжок выше: 1.0 = одинаково, 0.75 ≈ на треть выше
     climbSpeed: 250,
+    dashSpeed: 720,       // рывок (Shift / C): скорость и длительность
+    dashTime: 0.22,
+    dashCd: 1.1,
     stompKill: true,
     stompBounce: 540,
     colors: {             // базовая палитра героя
@@ -145,6 +148,8 @@ RA.CONFIG = {
       { id: 'reaper',  name: 'Жница',      price: 800,  cloak: true, suit: '#3a3a46', suit2: '#1e1e28', scarf: '#b71c1c', eye: '#ff5252' },
       { id: 'ghost',   name: 'Призрак',    price: 800,  cloak: true, suit: '#dfe8f2', suit2: '#9fb2c8', scarf: '#78909c', eye: '#4fc3f7' },
       { id: 'storm',   name: 'Гроза',      price: 600,  suit: '#212121', suit2: '#0d0d0d', scarf: '#ffd600', eye: '#ffd600' },
+      { id: 'zorro',   name: 'Зорро',      price: 700,  suit: '#141414', suit2: '#000000', scarf: '#e8e8e8', eye: '#e53935' },
+      { id: 'neon',    name: 'Неон',       price: 1400, suit: '#0d0d1a', suit2: '#000000', scarf: '#00e5ff', eye: '#00e5ff' },
       { id: 'lord',    name: 'Кровавый лорд', price: 1500, suit: '#4a0d0d', suit2: '#260404', scarf: '#8e0000', eye: '#ff1744' },
       { id: 'gold',    name: 'Золотой',    price: 1000, suit: '#ffd700', suit2: '#9c6d00', scarf: '#fff176' }
     ],
@@ -155,6 +160,7 @@ RA.CONFIG = {
       { id: 'none',     name: 'Без оружия', price: 0,    desc: 'Только прыжки и ловкость', cooldown: 0,    dmg: 0 },
       { id: 'kunai',    name: 'Кунай',      price: 150,  desc: 'Бросок (X). Обезвреживает одного', cooldown: 1.1, speed: 760, dmg: 1 },
       { id: 'shuriken', name: 'Сюрикен',    price: 400,  desc: 'Быстрый бросок (X). Пробивает всех', cooldown: 0.45, speed: 950, pierce: 99, dmg: 1 },
+      { id: 'dual',     name: 'Двойные куны', price: 2000, desc: 'Два кунайя веером (X)', cooldown: 1.1, speed: 820, dmg: 1 },
       { id: 'katana',   name: 'Катана',     price: 650,  desc: 'Взмах клинка (X). Рубит рядом даже тяжёлых', cooldown: 0.8, melee: true, dmg: 2 },
       { id: 'bow',      name: 'Лук',        price: 900,  desc: 'Дальнобойная стрела (X). Пробивает двоих', cooldown: 1.4, speed: 1100, pierce: 1, dmg: 2 },
       { id: 'bomb',     name: 'Бомба',      price: 1200, desc: 'Взрыв по площади (X). Сносит всех рядом', cooldown: 2.2, lob: true, dmg: 3 }
@@ -174,6 +180,18 @@ RA.CONFIG = {
 
   // ---------- РЕЙТИНГ ----------
   rating: { avg: 4.4, votes: 16 },
+
+  // ---------- ДОСТИЖЕНИЯ ----------
+  achievements: [
+    { id: 'firstkill', name: 'Первая кровь',    desc: 'Обезвредь первого врага' },
+    { id: 'run500',    name: 'Марафонец',       desc: 'Пробеги 500 м за забег' },
+    { id: 'rich',      name: 'Богач',           desc: 'Собери 100 золота за забег' },
+    { id: 'slayer10',  name: 'Гроза закона',    desc: 'Обезвредь 10 врагов за забег' },
+    { id: 'boss1',     name: 'Убийца боссов',   desc: 'Победи стражника-босса' },
+    { id: 'cam5',      name: 'Путешественник',  desc: 'Пройди 5 уровней кампании' },
+    { id: 'wind',      name: 'Ветер',           desc: 'Сделай 5 рывков за забег' },
+    { id: 'allbiomes', name: 'Всевидящий',      desc: 'Побывай во всех 5 биомах' }
+  ],
 
   // ---------- ТЕКСТЫ ----------
   texts: {
