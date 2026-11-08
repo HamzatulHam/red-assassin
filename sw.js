@@ -1,6 +1,8 @@
 /* Service Worker: офлайн-кэш «Красного асасина».
-   После первого открытия игра работает без интернета (PWA). */
-const CACHE = 'ra-cache-v1';
+   Стратегия «сеть прежде всего»: обновления подхватываются сразу,
+   а без интернета игра работает из кэша. При выкладке новой версии
+   поднимай номер в имени CACHE (ra-cache-v2 → v3 → …). */
+const CACHE = 'ra-cache-v2';
 const ASSETS = [
   './',
   'index.html',
@@ -37,19 +39,19 @@ self.addEventListener('activate', function (e) {
   );
 });
 
-// «сначала кэш, потом сеть»: офлайн — играем, онлайн — обновляем кэш в фоне
+// «сеть прежде всего»: онлайн — берём свежее и обновляем кэш, офлайн — из кэша
 self.addEventListener('fetch', function (e) {
   if (e.request.method !== 'GET') return;
   e.respondWith(
-    caches.match(e.request).then(function (hit) {
-      return hit || fetch(e.request).then(function (resp) {
-        try {
-          const copy = resp.clone();
-          caches.open(CACHE).then(function (c) { c.put(e.request, copy); });
-        } catch (err) {}
-        return resp;
-      }).catch(function () {
-        return e.request.mode === 'navigate' ? caches.match('./') : Response.error();
+    fetch(e.request).then(function (resp) {
+      try {
+        const copy = resp.clone();
+        caches.open(CACHE).then(function (c) { c.put(e.request, copy); });
+      } catch (err) {}
+      return resp;
+    }).catch(function () {
+      return caches.match(e.request).then(function (hit) {
+        return hit || caches.match('./');
       });
     })
   );
