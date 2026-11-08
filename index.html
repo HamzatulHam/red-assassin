@@ -8,7 +8,7 @@
 <!-- Telegram Mini App: если игра открыта в Telegram — получаем его API -->
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <!-- PWA: установка на телефон (Android/iPhone), офлайн-режим -->
-<link rel="manifest" href="manifest.webmanifest?v=9">
+<link rel="manifest" href="manifest.webmanifest?v=10">
 <meta name="theme-color" content="#7f1414">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -16,8 +16,8 @@
 <meta name="apple-mobile-web-app-title" content="Асасин">
 <link rel="apple-touch-icon" href="icon-192.png">
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
-<!-- ?v=9 — версия файлов: при обновлении игры поднимай её, чтобы кэш не мешал -->
-<link rel="stylesheet" href="css/style.css?v=9">
+<!-- ?v=10 — версия файлов: при обновлении игры поднимай её, чтобы кэш не мешал -->
+<link rel="stylesheet" href="css/style.css?v=10">
 </head>
 <body>
 
@@ -56,12 +56,19 @@
       <button id="btn-throw" type="button" title="Бросить оружие (X)">🎯</button>
       <div id="rotate-hint"><span>🔄 Держи телефон горизонтально</span><button id="rotate-close" type="button" title="Не поворачивать">✕</button></div>
 
-      <div class="overlay" id="ov-menu">
-        <h2 class="game-title">КРАСНЫЙ<br>АСАССИН</h2>
+      <div class="overlay menu-brutal" id="ov-menu">
+        <div class="mb-kanji">暗殺者</div>
+        <div class="mb-slash mb-slash1"></div>
+        <div class="mb-slash mb-slash2"></div>
+        <h2 class="game-title mb-title">
+          <span class="mb-title-top">КРАСНЫЙ</span>
+          <span class="mb-title-main">АСАССИН</span>
+        </h2>
+        <div class="mb-tagline">БЕГИ · ПРЫГАЙ · ВЫЖИВАЙ</div>
         <p class="ov-sub" id="menu-sub"></p>
         <div class="menu-btns">
-          <button class="btn-primary" id="btn-start" type="button">▶ Играть</button>
-          <button class="btn-secondary" id="btn-shop" type="button">🛒 Магазин</button>
+          <button class="btn-primary mb-play" id="btn-start" type="button">▶ Играть</button>
+          <button class="btn-secondary mb-shop" id="btn-shop" type="button">🛒 Магазин</button>
         </div>
         <p class="ov-hint" id="menu-controls"></p>
         <p class="ov-best" id="menu-best"></p>
@@ -142,18 +149,18 @@
   <div class="wrap">Учебная демо-страница в стиле игровых порталов. Код открыт — меняйте что хотите!</div>
 </footer>
 
-<script src="js/config.js?v=9"></script>
-<script src="js/save.js?v=9"></script>
-<script src="js/world.js?v=9"></script>
-<script src="js/entities.js?v=9"></script>
-<script src="js/player.js?v=9"></script>
-<script src="js/game.js?v=9"></script>
-<script src="js/ui.js?v=9"></script>
+<script src="js/config.js?v=10"></script>
+<script src="js/save.js?v=10"></script>
+<script src="js/world.js?v=10"></script>
+<script src="js/entities.js?v=10"></script>
+<script src="js/player.js?v=10"></script>
+<script src="js/game.js?v=10"></script>
+<script src="js/ui.js?v=10"></script>
 <script>
 // PWA: регистрация офлайн-кэша (после первого открытия игра работает без сети)
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function () {
-    navigator.serviceWorker.register('sw.js?v=9').catch(function () {});
+    navigator.serviceWorker.register('sw.js?v=10').catch(function () {});
   });
 }
 </script>
