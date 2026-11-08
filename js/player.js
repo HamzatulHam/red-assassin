@@ -70,8 +70,8 @@ RA.Player = (function () {
     P.noClimb = Math.max(0, P.noClimb - dt);
     if (P.invuln > 0) P.invuln -= dt;   // мигание после сработавшего щита
 
-    // расход буфера прыжка (прокачка «Прыгучесть» усиливает прыжки)
-    const jk = 1 + 0.04 * (game.jumpLvl || 0);
+    // расход буфера прыжка (прокачка «Прыгучесть»: +5% за уровень)
+    const jk = 1 + 0.05 * (game.jumpLvl || 0);
     if (P.buffer > 0 && P.state !== 'climb') {
       if (P.onGround || P.coyote > 0) {
         P.vy = -C.jumpV * jk; P.onGround = false; P.coyote = 0;
