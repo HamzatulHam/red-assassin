@@ -44,7 +44,7 @@ RA.UI = (function () {
     const hide = playing || isFullscreen() || rotateMode;
     dl.classList.toggle('hidden', hide);
     inst.classList.toggle('hidden', hide || isStandalone() || inTelegram());
-    if (fs) fs.classList.toggle('hidden', rotateMode);
+    if (fs) fs.classList.toggle('hidden', rotateMode || isStandalone());
   };
 
   // вызывается из game.js при старте/конце забега
@@ -311,7 +311,7 @@ RA.UI = (function () {
       const box = el('stage-wrap');
       const req = box.requestFullscreen || box.webkitRequestFullscreen;
       if (!req) {
-        alert('В этом браузере полный экран не поддерживается (Safari на iPhone так не умеет — ограничение Apple).\n\nНа iPhone два способа:\n1) Установи игру: «Поделиться» → «На экран „Домой“» — из иконки она открывается на весь экран;\n2) Играй через Telegram: кнопка 🎮 — при старте полный экран включается сам.');
+        alert('⚠️ На iPhone полный экран для сайтов не делает НИ ОДИН браузер — Chrome, Firefox и Яндекс на iPhone работают на движке Apple (ограничение iOS, не игры). Менять браузер бесполезно.\n\nРабочие способы:\n1) Установи игру: в Safari нажми «Поделиться» → «На экран „Домой“» — из иконки она всегда на весь экран.\n2) Играй через Telegram: @ASSASINES_REDBOT → 🎮 — при старте полный экран включается сам (если нет — обнови Telegram в App Store).');
         return;
       }
       if (!document.fullscreenElement) {
