@@ -2,13 +2,13 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="description" content="Красный асасин — бесплатная онлайн-игра раннер: беги, лазай по стенам, собирай золото и не попадись закону.">
 <title>Красный асасин — играть онлайн</title>
 <!-- Telegram Mini App: если игра открыта в Telegram — получаем его API -->
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <!-- PWA: установка на телефон (Android/iPhone), офлайн-режим -->
-<link rel="manifest" href="manifest.webmanifest?v=4">
+<link rel="manifest" href="manifest.webmanifest?v=5">
 <meta name="theme-color" content="#7f1414">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -16,8 +16,8 @@
 <meta name="apple-mobile-web-app-title" content="Асасин">
 <link rel="apple-touch-icon" href="icon-192.png">
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
-<!-- ?v=4 — версия файлов: при обновлении игры поднимай её, чтобы кэш не мешал -->
-<link rel="stylesheet" href="css/style.css?v=4">
+<!-- ?v=5 — версия файлов: при обновлении игры поднимай её, чтобы кэш не мешал -->
+<link rel="stylesheet" href="css/style.css?v=5">
 </head>
 <body>
 
@@ -142,18 +142,18 @@
   <div class="wrap">Учебная демо-страница в стиле игровых порталов. Код открыт — меняйте что хотите!</div>
 </footer>
 
-<script src="js/config.js?v=4"></script>
-<script src="js/save.js?v=4"></script>
-<script src="js/world.js?v=4"></script>
-<script src="js/entities.js?v=4"></script>
-<script src="js/player.js?v=4"></script>
-<script src="js/game.js?v=4"></script>
-<script src="js/ui.js?v=4"></script>
+<script src="js/config.js?v=5"></script>
+<script src="js/save.js?v=5"></script>
+<script src="js/world.js?v=5"></script>
+<script src="js/entities.js?v=5"></script>
+<script src="js/player.js?v=5"></script>
+<script src="js/game.js?v=5"></script>
+<script src="js/ui.js?v=5"></script>
 <script>
 // PWA: регистрация офлайн-кэша (после первого открытия игра работает без сети)
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function () {
-    navigator.serviceWorker.register('sw.js?v=4').catch(function () {});
+    navigator.serviceWorker.register('sw.js?v=5').catch(function () {});
   });
 }
 </script>
