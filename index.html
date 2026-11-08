@@ -8,7 +8,7 @@
 <!-- Telegram Mini App: если игра открыта в Telegram — получаем его API -->
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <!-- PWA: установка на телефон (Android/iPhone), офлайн-режим -->
-<link rel="manifest" href="manifest.webmanifest?v=6">
+<link rel="manifest" href="manifest.webmanifest?v=7">
 <meta name="theme-color" content="#7f1414">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -16,8 +16,8 @@
 <meta name="apple-mobile-web-app-title" content="Асасин">
 <link rel="apple-touch-icon" href="icon-192.png">
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
-<!-- ?v=6 — версия файлов: при обновлении игры поднимай её, чтобы кэш не мешал -->
-<link rel="stylesheet" href="css/style.css?v=6">
+<!-- ?v=7 — версия файлов: при обновлении игры поднимай её, чтобы кэш не мешал -->
+<link rel="stylesheet" href="css/style.css?v=7">
 </head>
 <body>
 
@@ -142,18 +142,18 @@
   <div class="wrap">Учебная демо-страница в стиле игровых порталов. Код открыт — меняйте что хотите!</div>
 </footer>
 
-<script src="js/config.js?v=6"></script>
-<script src="js/save.js?v=6"></script>
-<script src="js/world.js?v=6"></script>
-<script src="js/entities.js?v=6"></script>
-<script src="js/player.js?v=6"></script>
-<script src="js/game.js?v=6"></script>
-<script src="js/ui.js?v=6"></script>
+<script src="js/config.js?v=7"></script>
+<script src="js/save.js?v=7"></script>
+<script src="js/world.js?v=7"></script>
+<script src="js/entities.js?v=7"></script>
+<script src="js/player.js?v=7"></script>
+<script src="js/game.js?v=7"></script>
+<script src="js/ui.js?v=7"></script>
 <script>
 // PWA: регистрация офлайн-кэша (после первого открытия игра работает без сети)
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function () {
-    navigator.serviceWorker.register('sw.js?v=6').catch(function () {});
+    navigator.serviceWorker.register('sw.js?v=7').catch(function () {});
   });
 }
 </script>
