@@ -29,6 +29,7 @@ RA.createPlayer = function (opts) {
     colors: Object.assign({}, CFG.player.colors),
     cloak: false,
     shields: 0, invuln: 0,
+    dashT: 0, dashCd: 0, dashesUsed: 0,
     kvx2: 0,
     /* дуэль / свободное движение */
     freeMove: !!opts.freeMove,
@@ -70,6 +71,15 @@ RA.createPlayer = function (opts) {
 
   function tryJump() { P.buffer = 0.12; }
 
+  // рывок: короткий бросок вперёд с неуязвимостью
+  function doDash(game) {
+    if (P.dashCd > 0 || P.state === 'dead' || P.state === 'climb') return;
+    P.dashT = CFG.player.dashTime;
+    P.dashCd = CFG.player.dashCd;
+    P.dashesUsed++;
+    RA.Sound.sfx.throwK();
+  }
+
   function die(cause, game) {
     if (P.state === 'dead') return;
     P.state = 'dead'; P.cause = cause;
@@ -104,6 +114,17 @@ RA.createPlayer = function (opts) {
 
     if (P.invuln > 0) P.invuln -= dt;
     if (P.hitCd > 0) P.hitCd -= dt;
+    if (P.dashCd > 0) P.dashCd -= dt;
+
+    // рывок: рывок вперёд + неуязвимость + шлейф
+    if (P.dashT > 0) {
+      P.dashT -= dt;
+      P.invuln = Math.max(P.invuln, 0.06);
+      P.x += (P.freeMove ? P.facing : 1) * CFG.player.dashSpeed * dt;
+      if (Math.random() < dt * 40) {
+        RA.Particles.burst(P.x + P.w / 2, P.y + P.h / 2, P.colors.suit, 1, { life: 0.3, spread: 10, up: 10 });
+      }
+    }
     if (P.onGround) P.coyote = 0.09; else P.coyote = Math.max(0, P.coyote - dt);
     P.buffer = Math.max(0, P.buffer - dt);
     P.noClimb = Math.max(0, P.noClimb - dt);
@@ -349,7 +370,7 @@ RA.createPlayer = function (opts) {
 
   return {
     p: P, reset: reset, update: update, draw: draw,
-    tryJump: tryJump, die: die, hurt: hurt, applySkin: applySkin
+    tryJump: tryJump, die: die, hurt: hurt, applySkin: applySkin, doDash: doDash
   };
 };
 
