@@ -51,6 +51,14 @@ RA.UI = (function () {
     el('hud').style.display = on ? 'none' : '';
   }
 
+  // сенсорные кнопки дуэли — только на тач-экранах
+  function setDuelTouch(on) {
+    const dt = el('duel-touch');
+    if (!dt) return;
+    const coarse = window.matchMedia('(pointer: coarse)').matches;
+    dt.classList.toggle('hidden', !(on && coarse));
+  }
+
   /* ---------- HUD ---------- */
 
   function buildHud() {
@@ -491,6 +499,7 @@ RA.UI = (function () {
     setWallet: setWallet,
     setPlaying: setPlaying,
     setDuelHUD: setDuelHUD,
+    setDuelTouch: setDuelTouch,
     toast: toast,
     banner: function (text) {
       const b = el('banner');
