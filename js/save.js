@@ -29,6 +29,7 @@ RA.Save = (function () {
       weapons: [RA.CONFIG.shop.weapons[0].id],
       weapon: RA.CONFIG.shop.weapons[0].id,
       up: up,
+      campaign: { unlocked: 1, done: [] },
       ts: 0
     };
   }
@@ -47,6 +48,10 @@ RA.Save = (function () {
     if (!RA.CONFIG.shop.skins.some(function (s) { return s.id === data.skin; })) data.skin = def.skin;
     if (!RA.CONFIG.shop.weapons.some(function (w) { return w.id === data.weapon; })) data.weapon = def.weapon;
     if (!data.up || typeof data.up !== 'object') data.up = def.up;
+    if (!data.campaign || typeof data.campaign !== 'object' ||
+        typeof data.campaign.unlocked !== 'number' || !Array.isArray(data.campaign.done)) {
+      data.campaign = { unlocked: 1, done: [] };
+    }
     RA.CONFIG.shop.upgrades.forEach(function (u) {
       const v = data.up[u.id];
       if (typeof v !== 'number' || v < 0 || v > u.max) data.up[u.id] = 0;
