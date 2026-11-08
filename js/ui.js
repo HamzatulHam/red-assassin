@@ -230,7 +230,7 @@ RA.UI = (function () {
         box.appendChild(card({
           top: '<div class="pips">' + '●'.repeat(lvl) + '<i>' + '●'.repeat(u.max - lvl) + '</i></div>',
           name: u.name,
-          sub: u.desc,
+          sub: u.desc + ' · ' + u.effect(Math.min(lvl + 1, u.max)),
           btn: maxed ? S().maxed : S().upgrade + ' 💰' + cost,
           disabled: maxed || (!maxed && d.gold < cost),
           onBtn: function () {
