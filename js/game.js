@@ -86,6 +86,7 @@ RA.Game = (function () {
     runGold = 0;
 
     RA.UI.hideOverlays();
+    RA.UI.setPlaying(true);   // в игре: прячем «Установить» и «Скачать»
     sfx.ensure();
   }
 
@@ -203,6 +204,7 @@ RA.Game = (function () {
           score: sc, coins: coinsN, dist: Math.floor(dist), best: best, record: record,
           toWallet: earned
         });
+        RA.UI.setPlaying(false);   // на экране результата кнопки возвращаются
       }
     }
 
