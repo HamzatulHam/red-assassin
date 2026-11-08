@@ -120,7 +120,10 @@ RA.createPlayer = function (opts) {
     if (P.dashT > 0) {
       P.dashT -= dt;
       P.invuln = Math.max(P.invuln, 0.06);
-      P.x += (P.freeMove ? P.facing : 1) * CFG.player.dashSpeed * dt;
+      if (P.state !== 'climb') {
+        P.x += (P.freeMove ? P.facing : 1) * CFG.player.dashSpeed * dt;
+        P.runPhase += CFG.player.dashSpeed * dt * 0.045;   // ноги не «скользят»
+      }
       if (Math.random() < dt * 40) {
         RA.Particles.burst(P.x + P.w / 2, P.y + P.h / 2, P.colors.suit, 1, { life: 0.3, spread: 10, up: 10 });
       }
