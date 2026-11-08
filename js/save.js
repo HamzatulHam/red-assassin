@@ -30,6 +30,7 @@ RA.Save = (function () {
       weapon: RA.CONFIG.shop.weapons[0].id,
       up: up,
       campaign: { unlocked: 1, done: [] },
+      ach: [],
       ts: 0
     };
   }
@@ -52,6 +53,7 @@ RA.Save = (function () {
         typeof data.campaign.unlocked !== 'number' || !Array.isArray(data.campaign.done)) {
       data.campaign = { unlocked: 1, done: [] };
     }
+    if (!Array.isArray(data.ach)) data.ach = [];
     RA.CONFIG.shop.upgrades.forEach(function (u) {
       const v = data.up[u.id];
       if (typeof v !== 'number' || v < 0 || v > u.max) data.up[u.id] = 0;
