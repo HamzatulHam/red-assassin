@@ -8,7 +8,7 @@
 <!-- Telegram Mini App: если игра открыта в Telegram — получаем его API -->
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <!-- PWA: установка на телефон (Android/iPhone), офлайн-режим -->
-<link rel="manifest" href="manifest.webmanifest?v=10">
+<link rel="manifest" href="manifest.webmanifest?v=11">
 <meta name="theme-color" content="#7f1414">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -16,8 +16,8 @@
 <meta name="apple-mobile-web-app-title" content="Асасин">
 <link rel="apple-touch-icon" href="icon-192.png">
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
-<!-- ?v=10 — версия файлов: при обновлении игры поднимай её, чтобы кэш не мешал -->
-<link rel="stylesheet" href="css/style.css?v=10">
+<!-- ?v=11 — версия файлов: при обновлении игры поднимай её, чтобы кэш не мешал -->
+<link rel="stylesheet" href="css/style.css?v=11">
 </head>
 <body>
 
@@ -67,8 +67,12 @@
         <div class="mb-tagline">БЕГИ · ПРЫГАЙ · ВЫЖИВАЙ</div>
         <p class="ov-sub" id="menu-sub"></p>
         <div class="menu-btns">
-          <button class="btn-primary mb-play" id="btn-start" type="button">▶ Играть</button>
-          <button class="btn-secondary mb-shop" id="btn-shop" type="button">🛒 Магазин</button>
+          <button class="btn-primary mb-play" id="btn-start" type="button">▶ БЕСКОНЕЧНЫЙ</button>
+        </div>
+        <div class="menu-btns mb-row2">
+          <button class="btn-secondary mb-shop" id="btn-campaign" type="button">🗺 КАМПАНИЯ</button>
+          <button class="btn-secondary mb-shop" id="btn-duel" type="button">⚔ ДУЭЛЬ</button>
+          <button class="btn-secondary mb-shop" id="btn-shop" type="button">🛒 МАГАЗИН</button>
         </div>
         <p class="ov-hint" id="menu-controls"></p>
         <p class="ov-best" id="menu-best"></p>
@@ -86,9 +90,38 @@
         <p id="over-wallet" class="ov-best"></p>
         <div class="menu-btns">
           <button class="btn-primary" id="btn-restart" type="button">↻ Ещё раз</button>
+          <button class="btn-secondary" id="btn-map" type="button">🗺 К карте</button>
           <button class="btn-secondary" id="btn-shop2" type="button">🛒 Магазин</button>
         </div>
         <p class="ov-hint">или нажмите ПРОБЕЛ</p>
+      </div>
+
+      <div class="overlay hidden" id="ov-map">
+        <h2 class="over-title">🗺 КАРТА КАМПАНИИ</h2>
+        <p class="ov-sub">Проходи уровни по порядку — каждый в своём биоме. За прохождение — золото!</p>
+        <div id="map-nodes"></div>
+        <button class="btn-primary" id="btn-map2" type="button">← В МЕНЮ</button>
+      </div>
+
+      <div class="overlay hidden" id="ov-win">
+        <h2 class="over-title" id="win-title"></h2>
+        <p class="ov-sub" id="win-level"></p>
+        <p class="ov-best" id="win-stats"></p>
+        <p class="record" id="win-reward"></p>
+        <div class="menu-btns">
+          <button class="btn-primary" id="btn-next" type="button">ДАЛЬШЕ →</button>
+          <button class="btn-secondary" id="btn-map2b" type="button">🗺 КАРТА</button>
+          <button class="btn-secondary" id="btn-tomenu" type="button">В МЕНЮ</button>
+        </div>
+      </div>
+
+      <div class="overlay hidden" id="ov-duel-end">
+        <h2 class="over-title" id="duel-title"></h2>
+        <p class="ov-best" id="duel-score"></p>
+        <div class="menu-btns">
+          <button class="btn-primary" id="btn-again" type="button">↻ РЕВАНШ</button>
+          <button class="btn-secondary" id="btn-tomenu2" type="button">В МЕНЮ</button>
+        </div>
       </div>
 
       <div class="overlay hidden" id="ov-shop">
@@ -149,18 +182,19 @@
   <div class="wrap">Учебная демо-страница в стиле игровых порталов. Код открыт — меняйте что хотите!</div>
 </footer>
 
-<script src="js/config.js?v=10"></script>
-<script src="js/save.js?v=10"></script>
-<script src="js/world.js?v=10"></script>
-<script src="js/entities.js?v=10"></script>
-<script src="js/player.js?v=10"></script>
-<script src="js/game.js?v=10"></script>
-<script src="js/ui.js?v=10"></script>
+<script src="js/config.js?v=11"></script>
+<script src="js/save.js?v=11"></script>
+<script src="js/audio.js?v=11"></script>
+<script src="js/world.js?v=11"></script>
+<script src="js/entities.js?v=11"></script>
+<script src="js/player.js?v=11"></script>
+<script src="js/game.js?v=11"></script>
+<script src="js/ui.js?v=11"></script>
 <script>
 // PWA: регистрация офлайн-кэша (после первого открытия игра работает без сети)
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function () {
-    navigator.serviceWorker.register('sw.js?v=10').catch(function () {});
+    navigator.serviceWorker.register('sw.js?v=11').catch(function () {});
   });
 }
 </script>
