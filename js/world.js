@@ -1,65 +1,59 @@
 /* ============================================================
    МИР — генерация бесконечного уровня из «узоров»
-   ------------------------------------------------------------
-   Уровень строится кусками (паттернами) впереди камеры:
-   ровная земля, овраг, башня, стена, ворота.
-   Шансы паттернов и «злость» уровня настраиваются в config.js.
-
-   КАК ДОБАВИТЬ СВОЁ ПРЕПЯТСТВИЕ:
-   1) Напишите функцию-строитель по образцу patWall() ниже
-      (не забудьте сдвинуть S.genX на ширину вашего куска!).
-   2) Добавьте шанс в config.world (например trapChance: 0.1).
-   3) Добавьте ветку в addPattern(): if (r < сумма) return patTrap(...)
-   4) Если нужно особое рисование — добавьте вид в World.draw().
+   Биом-палитра приходит из game (pal) — платформы и декор
+   перекрашиваются под окружение (закат/ночь/гроза/снег/рассвет).
    ============================================================ */
 
 window.RA = window.RA || {};
 
 RA.World = (function () {
 
-  // S — состояние мира (доступно извне как RA.World.state)
   const S = {
-    solids: [],   // всё твёрдое: земля, башни, стены, балки ворот
-    gates: [],    // ворота целиком (для рисования)
-    coins: [],    // мешочки с золотом
-    guards: [],   // охранники («закон»)
-    genX: 0       // координата, до которой уровень уже сгенерирован
+    solids: [], gates: [], coins: [], guards: [],
+    genX: 0
   };
+  let pruneTick = 0;
 
   /* ---------- строители ---------- */
 
-  // ровная земля: плита от y до низа экрана
   function ground(x, w, y) {
     S.solids.push({ kind: 'ground', x: x, y: y, w: w, h: RA.CONFIG.height - y + 80 });
   }
-
-  // башня — приподнятая платформа
   function tower(x, w, y) {
     S.solids.push({ kind: 'tower', x: x, y: y, w: w, h: RA.CONFIG.height - y + 80 });
   }
-
-  // узкая стена стоит на земле (по ней герой лазает)
   function wallAt(x, yTop, h) {
     S.solids.push({ kind: 'wall', x: x, y: yTop, w: 26, h: h });
   }
-
-  // ворота: балка — твёрдая (на неё можно запрыгнуть), столбы — декорация
   function gateAt(x, yBase) {
     const beamY = yBase - 130, beamW = 110;
     S.solids.push({ kind: 'beam', x: x, y: beamY, w: beamW, h: 16 });
     S.gates.push({ x: x, y: beamY, w: beamW, base: yBase });
   }
-
   function coin(x, y) { S.coins.push({ x: x, y: y, taken: false, ph: Math.random() * 6 }); }
 
-  function guard(x, y, range) {
-    S.guards.push({ x: x, y: y, w: 36, h: 56, x0: x, range: range, dir: 1, dead: 0, ph: Math.random() * 6 });
+  // враг: тип по шансам (лучники/тяжёлые/тени чаще на высокой сложности)
+  function enemy(x, y, range, diff, allowHeavy) {
+    const E = RA.CONFIG.enemies;
+    const aC = E.archerChance + E.growth * diff * 0.5;
+    const hC = (allowHeavy === false ? 0 : E.heavyChance + E.growth * diff * 0.4);
+    const sC = E.shadowChance + E.growth * diff * 0.4;
+    const r = Math.random();
+    let type = 'guard', w = 36, h = 56;
+    if (r < aC) { type = 'archer'; }
+    else if (r < aC + hC) { type = 'heavy'; w = 48; h = 64; }
+    else if (r < aC + hC + sC) { type = 'shadow'; w = 34; h = 56; }
+    S.guards.push({
+      type: type, x: x, y: y, w: w, h: h, x0: x, range: range,
+      dir: Math.random() < 0.5 ? 1 : -1, dead: 0, ph: Math.random() * 6,
+      hp: type === 'heavy' ? RA.CONFIG.enemies.heavyHp : 1,
+      cd: 0, draw: 0, hurtT: 0, dash: false
+    });
   }
 
-  /* ---------- паттерны уровня ---------- */
+  /* ---------- паттерны ---------- */
 
-  // ровный участок: возможно золото и охранник
-  function patFlat(G, diff) {
+  function patFlat(G, diff, biomeIdx) {
     const C = RA.CONFIG.world;
     const w = RA.rand(260, 470);
     ground(S.genX, w, G);
@@ -68,17 +62,16 @@ RA.World = (function () {
       for (let i = 0; i < n; i++) coin(S.genX + w * 0.3 + i * 40, G - 64);
     }
     if (RA.chance(C.guardChance + C.guardChanceGrow * diff)) {
-      guard(S.genX + w * 0.6, G, Math.min(110, w * 0.25));
+      enemy(S.genX + w * 0.6, G, Math.min(110, w * 0.25), diff);
     }
     S.genX += w;
   }
 
-  // овраг + земля после него; иногда дуга золота над пропастью
   function patGap(speed, G, diff) {
     const C = RA.CONFIG.world;
     const gapW = Math.round(RA.rand(C.gapMin, Math.min(C.gapMax, 60 + speed * 0.5)));
     const gx0 = S.genX;
-    S.genX += gapW;                       // сама яма
+    S.genX += gapW;
     const w = RA.rand(300, 500);
     ground(S.genX, w, G);
     if (RA.chance(C.gapCoinChance)) {
@@ -87,12 +80,11 @@ RA.World = (function () {
       coin(gx0 + gapW * 0.80, G - 95);
     }
     if (RA.chance(C.guardChance + C.guardChanceGrow * diff)) {
-      guard(S.genX + w * 0.55, G, Math.min(120, w * 0.3));
+      enemy(S.genX + w * 0.55, G, Math.min(120, w * 0.3), diff);
     }
     S.genX += w;
   }
 
-  // башня: забраться наверх прыжком, там золото или охранник
   function patTower(G, diff) {
     const C = RA.CONFIG.world;
     const pre = RA.rand(170, 260);
@@ -106,19 +98,18 @@ RA.World = (function () {
       coin(S.genX + tw * 0.65, top - 34);
     }
     if (RA.chance(C.towerGuardChance * (0.5 + diff))) {
-      guard(S.genX + tw * 0.5, top, Math.min(70, tw * 0.4));
+      enemy(S.genX + tw * 0.5, top, Math.min(70, tw * 0.4), diff, false);  // на башне без тяжёлых
     }
     S.genX += tw;
 
     const post = RA.rand(210, 330);
     ground(S.genX, post, G);
     if (RA.chance(C.guardChance + C.guardChanceGrow * diff)) {
-      guard(S.genX + post * 0.5, G, post * 0.3);
+      enemy(S.genX + post * 0.5, G, post * 0.3, diff);
     }
     S.genX += post;
   }
 
-  // стена: герой по ней залезает; сверху золото; за стеной может ждать стражник
   function patWall(G, diff) {
     const C = RA.CONFIG.world;
     const pre = RA.rand(160, 250);
@@ -132,12 +123,11 @@ RA.World = (function () {
     const post = RA.rand(220, 320);
     ground(S.genX, post, G);
     if (RA.chance(C.guardChance * 1.4 + C.guardChanceGrow * diff)) {
-      guard(S.genX + post * 0.55, G, post * 0.3);
+      enemy(S.genX + post * 0.55, G, post * 0.3, diff);
     }
     S.genX += post;
   }
 
-  // ворота: можно пробежать внизу или запрыгнуть на балку
   function patGate(G) {
     const pre = RA.rand(150, 230);
     ground(S.genX, pre, G); S.genX += pre;
@@ -154,12 +144,9 @@ RA.World = (function () {
     S.genX += post;
   }
 
-  // выбор очередного узора по весам из config
-  function addPattern(speed) {
+  function addPattern(speed, diff) {
     const C = RA.CONFIG.world;
     const G = RA.CONFIG.groundY;
-    // сложность 0..1 растёт с дистанцией
-    const diff = Math.min(1, Math.max(0, (S.genX - 900) / C.difficultyRamp));
     const r = Math.random();
     if (r < C.gapChance) return patGap(speed, G, diff);
     if (r < C.gapChance + C.towerChance) return patTower(G, diff);
@@ -168,16 +155,167 @@ RA.World = (function () {
     return patFlat(G, diff);
   }
 
-  // чистим то, что осталось далеко позади камеры
   function prune(camX) {
     const keep = camX - 350;
     S.solids = S.solids.filter(function (s) { return s.x + s.w > keep; });
     S.coins = S.coins.filter(function (c) { return !c.taken && c.x > keep; });
-    S.guards = S.guards.filter(function (g) { return g.x + g.w > keep && !(g.dead && g.dead > 1.25); });
+    S.guards = S.guards.filter(function (g) { return g.x + g.w > keep && !(g.dead && g.dead > 1.3); });
     S.gates = S.gates.filter(function (g) { return g.x + g.w > keep; });
   }
 
-  let pruneTick = 0;   // счётчик кадров для редкой чистки мира
+  /* ---------- отрисовка платформ ---------- */
+
+  function drawSolids(ctx, cam, pal) {
+    const W = RA.CONFIG.width;
+    for (let i = 0; i < S.solids.length; i++) {
+      const s = S.solids[i];
+      if (s.kind === 'beam') continue;
+      const x = s.x - cam;
+      if (x + s.w < -40 || x > W + 40) continue;
+
+      if (s.kind === 'ground' || s.kind === 'tower') {
+        const g2 = ctx.createLinearGradient(0, s.y, 0, s.y + Math.min(s.h, 210));
+        g2.addColorStop(0, pal.gBody);
+        g2.addColorStop(1, pal.gBot);
+        ctx.fillStyle = g2;
+        ctx.fillRect(x, s.y, s.w, s.h);
+        ctx.fillStyle = 'rgba(0,0,0,.35)';
+        ctx.fillRect(x + s.w - 4, s.y, 4, s.h);
+        ctx.fillStyle = pal.gTop;
+        ctx.fillRect(x, s.y, s.w, 8);
+        ctx.fillStyle = 'rgba(' + pal.edge + ',.4)';
+        ctx.fillRect(x, s.y, s.w, 2);
+        // трава/снежные бугорки
+        const tufts = Math.min(6, Math.floor(s.w / 95));
+        for (let tI = 0; tI < tufts; tI++) {
+          const tx = s.x + (0.15 + 0.75 * RA.hash(s.x * 0.37 + tI * 13)) * s.w;
+          const th = 5 + RA.hash(s.x + tI) * 6;
+          ctx.fillStyle = pal.tuft;
+          ctx.beginPath();
+          ctx.moveTo(tx - 4, s.y + 1);
+          ctx.lineTo(tx, s.y - th);
+          ctx.lineTo(tx + 4, s.y + 1);
+          ctx.closePath(); ctx.fill();
+        }
+        ctx.fillStyle = 'rgba(0,0,0,.22)';
+        const step = 46, start = Math.ceil(s.x / step) * step;
+        for (let sx = start; sx < s.x + s.w; sx += step) ctx.fillRect(sx - cam, s.y + 10, 2, 26);
+      } else if (s.kind === 'wall') {
+        const wg = ctx.createLinearGradient(x, 0, x + s.w, 0);
+        wg.addColorStop(0, pal.wallHi); wg.addColorStop(0.35, pal.wall); wg.addColorStop(1, pal.wallLo);
+        ctx.fillStyle = wg;
+        ctx.fillRect(x, s.y, s.w, s.h);
+        ctx.fillStyle = pal.wallHi;
+        ctx.fillRect(x, s.y, s.w, 6);
+        ctx.fillStyle = 'rgba(0,0,0,.25)';
+        for (let by = s.y + 18; by < s.y + s.h; by += 18) ctx.fillRect(x, by, s.w, 2);
+      }
+    }
+  }
+
+  /* ---------- постройки фона по биому ---------- */
+
+  function drawPagoda(ctx, x, baseY, seed) {
+    const tiers = 2 + Math.floor(RA.hash(seed * 9) * 2);
+    let y = baseY, w = 100 + RA.hash(seed * 3) * 40;
+    for (let t = 0; t < tiers; t++) {
+      ctx.fillRect(x - w / 2 + 14, y - 18, w - 28, 18);
+      ctx.beginPath();
+      ctx.moveTo(x - w / 2 - 10, y);
+      ctx.lineTo(x - w / 2, y - 20);
+      ctx.lineTo(x + w / 2, y - 20);
+      ctx.lineTo(x + w / 2 + 10, y);
+      ctx.closePath(); ctx.fill();
+      y -= 26; w *= 0.78;
+    }
+    ctx.fillRect(x - 2, y - 16, 4, 16);
+    ctx.beginPath(); ctx.arc(x, y - 18, 3, 0, 7); ctx.fill();
+  }
+
+  function drawPines(ctx, x, baseY, seed) {
+    const n = 1 + Math.floor(RA.hash(seed) * 2);
+    for (let t = 0; t < n; t++) {
+      const px = x + t * 46, h = 80 + RA.hash(seed * 7 + t) * 70, w = 40 + RA.hash(seed + t) * 20;
+      ctx.fillRect(px - 3, baseY - 14, 6, 14);
+      for (let k = 0; k < 3; k++) {
+        const kw = w * (1 - k * 0.28), ky = baseY - 14 - k * h * 0.3;
+        ctx.beginPath();
+        ctx.moveTo(px - kw / 2, ky);
+        ctx.lineTo(px, ky - h * 0.38);
+        ctx.lineTo(px + kw / 2, ky);
+        ctx.closePath(); ctx.fill();
+      }
+    }
+  }
+
+  function drawRuins(ctx, x, baseY, seed) {
+    // сломанные колонны и арка
+    const cw = 16, ch = 50 + RA.hash(seed) * 40;
+    ctx.fillRect(x, baseY - ch, cw, ch);
+    ctx.fillRect(x - 3, baseY - ch - 6, cw + 6, 8);
+    if (RA.hash(seed * 3) > 0.4) {
+      ctx.fillRect(x + 60, baseY - ch * 0.7, cw, ch * 0.7);
+      ctx.fillRect(x - 3, baseY - ch - 6, 90, 8);
+    }
+  }
+
+  function drawBamboo(ctx, x, baseY, seed) {
+    const n = 2 + Math.floor(RA.hash(seed) * 3);
+    for (let t = 0; t < n; t++) {
+      const bx = x + t * 22, h = 90 + RA.hash(seed * 5 + t) * 80;
+      const lean = (RA.hash(seed + t) - 0.5) * 20;
+      ctx.fillRect(bx - 3 + lean * 0.4, baseY - h, 6, h);
+      for (let k = 0; k < 3; k++) {
+        const ly = baseY - h + 14 + k * 22;
+        ctx.beginPath();
+        ctx.moveTo(bx + lean * 0.6, ly);
+        ctx.quadraticCurveTo(bx + lean + 18, ly - 8, bx + lean + 30, ly + 4);
+        ctx.quadraticCurveTo(bx + lean + 16, ly + 2, bx + lean * 0.6, ly + 4);
+        ctx.closePath(); ctx.fill();
+      }
+    }
+  }
+
+  function drawDecor(ctx, cam, pal, type) {
+    const W = RA.CONFIG.width, period = 470, off = cam * 0.45, baseY = RA.CONFIG.groundY + 12;
+    const i0 = Math.floor(off / period) - 1;
+    for (let i = i0; i < i0 + Math.ceil(W / period) + 3; i++) {
+      const bx = i * period - off + 80;
+      if (bx < -140 || bx > W + 140) continue;
+      if (type === 'pagoda' && RA.hash(i * 31) > 0.3) drawPagoda(ctx, bx, baseY, i);
+      else if (type === 'pine') drawPines(ctx, bx, baseY, i);
+      else if (type === 'ruin') drawRuins(ctx, bx, baseY, i);
+      else if (type === 'bamboo') drawBamboo(ctx, bx, baseY, i);
+    }
+  }
+
+  /* ---------- ворота ---------- */
+
+  function drawGates(ctx, cam, pal) {
+    const W = RA.CONFIG.width;
+    for (let i = 0; i < S.gates.length; i++) {
+      const g = S.gates[i];
+      const x = g.x - cam;
+      if (x + g.w < -60 || x > W + 60) continue;
+      const pw = 14, base = g.base;
+      ctx.fillStyle = 'rgba(0,0,0,.25)';
+      ctx.beginPath(); ctx.ellipse(x + g.w / 2, base + 3, g.w * 0.75, 5, 0, 0, 7); ctx.fill();
+      ctx.fillStyle = pal.gate;
+      ctx.fillRect(x, g.y + 8, pw, base - g.y - 8);
+      ctx.fillRect(x + g.w - pw, g.y + 8, pw, base - g.y - 8);
+      ctx.fillStyle = 'rgba(0,0,0,.25)';
+      ctx.fillRect(x - 3, base - 10, pw + 6, 10);
+      ctx.fillRect(x + g.w - pw - 3, base - 10, pw + 6, 10);
+      ctx.fillStyle = pal.gateHi;
+      ctx.fillRect(x - 6, g.y, g.w + 12, 16);
+      ctx.fillStyle = 'rgba(255,255,255,.25)';
+      ctx.fillRect(x - 6, g.y, g.w + 12, 4);
+      ctx.fillStyle = pal.roof;
+      ctx.fillRect(x - 20, g.y - 14, g.w + 40, 9);
+      ctx.fillRect(x - 14, g.y - 5, 8, 6);
+      ctx.fillRect(x + g.w + 6, g.y - 5, 8, 6);
+    }
+  }
 
   /* ---------- публичный интерфейс ---------- */
 
@@ -187,90 +325,32 @@ RA.World = (function () {
     reset: function () {
       S.solids = []; S.gates = []; S.coins = []; S.guards = [];
       S.genX = 900;
-      ground(-300, 1200, RA.CONFIG.groundY);   // стартовая безопасная площадка
+      ground(-300, 1200, RA.CONFIG.groundY);
     },
 
-    // дорисовать мир впереди камеры (вызывать каждый кадр)
-    ensure: function (camX, speed) {
-      while (S.genX < camX + RA.CONFIG.width * 2) addPattern(speed);
-      if ((pruneTick++ & 31) === 0) prune(camX);   // чистка раз в ~32 кадра
+    // сборка арены для дуэли
+    buildArena: function () {
+      S.solids = []; S.gates = []; S.coins = []; S.guards = [];
+      const G = RA.CONFIG.groundY;
+      S.solids.push({ kind: 'ground', x: -40, y: G, w: RA.CONFIG.width + 80, h: RA.CONFIG.height - G + 80 });
+      S.solids.push({ kind: 'tower', x: 110, y: G - 120, w: 190, h: RA.CONFIG.height - (G - 120) + 80 });
+      S.solids.push({ kind: 'tower', x: RA.CONFIG.width - 300, y: G - 120, w: 190, h: RA.CONFIG.height - (G - 120) + 80 });
+      S.solids.push({ kind: 'tower', x: 400, y: G - 210, w: 160, h: RA.CONFIG.height - (G - 210) + 80 });
+      S.solids.push({ kind: 'wall', x: -26, y: G - 190, w: 26, h: 190 });
+      S.solids.push({ kind: 'wall', x: RA.CONFIG.width, y: G - 190, w: 26, h: 190 });
     },
 
-    // отрисовка земли, башен, стен и ворот (герой рисуется поверх)
-    draw: function (ctx, cam) {
+    ensure: function (camX, speed, diff) {
+      while (S.genX < camX + RA.CONFIG.width * 2) addPattern(speed, diff);
+      if ((pruneTick++ & 31) === 0) prune(camX);
+    },
+
+    draw: function (ctx, cam, pal) {
       const W = RA.CONFIG.width;
-
-      for (let i = 0; i < S.solids.length; i++) {
-        const s = S.solids[i];
-        if (s.kind === 'beam') continue;               // балки рисуются с воротами
-        const x = s.x - cam;
-        if (x + s.w < -40 || x > W + 40) continue;
-
-        if (s.kind === 'ground' || s.kind === 'tower') {
-          // объём: градиент сверху вниз + тень на правой грани
-          const g2 = ctx.createLinearGradient(0, s.y, 0, s.y + Math.min(s.h, 210));
-          g2.addColorStop(0, s.kind === 'ground' ? '#3a221a' : '#43281d');
-          g2.addColorStop(1, '#170c09');
-          ctx.fillStyle = g2;
-          ctx.fillRect(x, s.y, s.w, s.h);
-          ctx.fillStyle = 'rgba(0,0,0,.35)';
-          ctx.fillRect(x + s.w - 4, s.y, 4, s.h);
-          // верхняя кромка
-          ctx.fillStyle = s.kind === 'ground' ? '#4e3025' : '#5c3524';
-          ctx.fillRect(x, s.y, s.w, 8);
-          ctx.fillStyle = 'rgba(255,120,80,.4)';
-          ctx.fillRect(x, s.y, s.w, 2);
-          // кустики травы (детерминированно по позиции)
-          const tufts = Math.min(6, Math.floor(s.w / 95));
-          ctx.fillStyle = '#2f4a26';
-          for (let tI = 0; tI < tufts; tI++) {
-            const tx = s.x + (0.15 + 0.75 * RA.hash(s.x * 0.37 + tI * 13)) * s.w;
-            const th = 5 + RA.hash(s.x + tI) * 6;
-            ctx.beginPath();
-            ctx.moveTo(tx - 4, s.y + 1);
-            ctx.lineTo(tx, s.y - th);
-            ctx.lineTo(tx + 4, s.y + 1);
-            ctx.closePath(); ctx.fill();
-          }
-          // швы камня
-          ctx.fillStyle = 'rgba(0,0,0,.22)';
-          const step = 46, start = Math.ceil(s.x / step) * step;
-          for (let sx = start; sx < s.x + s.w; sx += step) ctx.fillRect(sx - cam, s.y + 10, 2, 26);
-        } else if (s.kind === 'wall') {
-          const wg = ctx.createLinearGradient(x, 0, x + s.w, 0);
-          wg.addColorStop(0, '#5a241d'); wg.addColorStop(0.35, '#431a15'); wg.addColorStop(1, '#2f120d');
-          ctx.fillStyle = wg;
-          ctx.fillRect(x, s.y, s.w, s.h);
-          ctx.fillStyle = '#6b2a22';
-          ctx.fillRect(x, s.y, s.w, 6);
-          ctx.fillStyle = 'rgba(0,0,0,.25)';
-          for (let by = s.y + 18; by < s.y + s.h; by += 18) ctx.fillRect(x, by, s.w, 2);
-        }
-      }
-
-      // ворота в стиле тории
-      for (let i = 0; i < S.gates.length; i++) {
-        const g = S.gates[i];
-        const x = g.x - cam;
-        if (x + g.w < -60 || x > W + 60) continue;
-        const pw = 14, base = g.base;
-        ctx.fillStyle = 'rgba(0,0,0,.25)';             // тень на земле
-        ctx.beginPath(); ctx.ellipse(x + g.w / 2, base + 3, g.w * 0.75, 5, 0, 0, 7); ctx.fill();
-        ctx.fillStyle = '#a83228';                     // столбы
-        ctx.fillRect(x, g.y + 8, pw, base - g.y - 8);
-        ctx.fillRect(x + g.w - pw, g.y + 8, pw, base - g.y - 8);
-        ctx.fillStyle = '#7e231c';                     // основания
-        ctx.fillRect(x - 3, base - 10, pw + 6, 10);
-        ctx.fillRect(x + g.w - pw - 3, base - 10, pw + 6, 10);
-        ctx.fillStyle = '#b73a2e';                     // балка (твёрдая)
-        ctx.fillRect(x - 6, g.y, g.w + 12, 16);
-        ctx.fillStyle = '#d4553a';
-        ctx.fillRect(x - 6, g.y, g.w + 12, 4);
-        ctx.fillStyle = '#2a1512';                     // верхняя крыша
-        ctx.fillRect(x - 20, g.y - 14, g.w + 40, 9);
-        ctx.fillRect(x - 14, g.y - 5, 8, 6);
-        ctx.fillRect(x + g.w + 6, g.y - 5, 8, 6);
-      }
+      ctx.fillStyle = pal.decor;
+      drawDecor(ctx, cam, pal, pal.decorType);
+      drawSolids(ctx, cam, pal);
+      drawGates(ctx, cam, pal);
     }
   };
 })();
