@@ -87,6 +87,10 @@ RA.Game = (function () {
 
     RA.UI.hideOverlays();
     RA.UI.setPlaying(true);   // в игре: прячем «Установить» и «Скачать»
+    // в Telegram (в том числе на iPhone) включаем настоящий полный экран
+    if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.requestFullscreen) {
+      try { window.Telegram.WebApp.requestFullscreen(); } catch (e) {}
+    }
     sfx.ensure();
   }
 
@@ -205,6 +209,10 @@ RA.Game = (function () {
           toWallet: earned
         });
         RA.UI.setPlaying(false);   // на экране результата кнопки возвращаются
+        // выходим из полного экрана Telegram — показываем панель с кнопками
+        if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.exitFullscreen) {
+          try { window.Telegram.WebApp.exitFullscreen(); } catch (e) {}
+        }
       }
     }
 
