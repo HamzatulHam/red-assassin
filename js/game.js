@@ -163,6 +163,7 @@ RA.Game = (function () {
     time += dt;
     updatePetals(dt);
     updateBirds(dt);
+    updateEmbers(dt);
 
     if (state === 'play') {
       speed = Math.min(CFG.player.speedMax, speed + CFG.player.speedGain * dt);
@@ -284,7 +285,7 @@ RA.Game = (function () {
     pitGrad.addColorStop(0, 'rgba(15,3,6,0)');
     pitGrad.addColorStop(1, 'rgba(12,2,5,.9)');
 
-    initLanterns(); initBirds(); initPetals();
+    initLanterns(); initBirds(); initPetals(); initEmbers();
   }
 
   function drawClouds() {
@@ -330,7 +331,40 @@ RA.Game = (function () {
 
   /* ---------- фонари, птицы и лепестки (живой фон) ---------- */
 
-  let lanterns = [], birds = [], petals = [];
+  let lanterns = [], birds = [], petals = [], embers = [];
+
+  function initEmbers() {
+    embers = [];
+    for (let i = 0; i < 26; i++) embers.push(newEmber(true));
+  }
+  function newEmber(anywhere) {
+    return {
+      x: Math.random() * CFG.width,
+      y: anywhere ? Math.random() * CFG.height : CFG.height + 6,
+      vx: (Math.random() - 0.5) * 14, vy: -(10 + Math.random() * 22),
+      s: 1 + Math.random() * 1.8, o: 0.12 + Math.random() * 0.3,
+      ph: Math.random() * 6.3
+    };
+  }
+  function updateEmbers(dt) {
+    for (let i = 0; i < embers.length; i++) {
+      const e = embers[i];
+      e.y += e.vy * dt;
+      e.x += (e.vx + Math.sin(time * 2 + e.ph) * 8) * dt;
+      if (e.y < -6 || e.x < -6 || e.x > CFG.width + 6) {
+        e.x = Math.random() * CFG.width; e.y = CFG.height + 6;
+      }
+    }
+  }
+  function drawEmbers() {
+    ctx.fillStyle = '#ffb066';
+    for (let i = 0; i < embers.length; i++) {
+      const e = embers[i];
+      ctx.globalAlpha = e.o * (0.55 + 0.45 * Math.sin(time * 3 + e.ph));
+      ctx.beginPath(); ctx.arc(e.x, e.y, e.s, 0, 7); ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+  }
 
   function initLanterns() {
     lanterns = [];
@@ -473,6 +507,7 @@ RA.Game = (function () {
     ctx.restore();
 
     drawPetals();                    // лепестки на переднем плане — глубина
+    drawEmbers();                    // тлеющие угли
     ctx.drawImage(vinC, 0, 0);
   }
 
