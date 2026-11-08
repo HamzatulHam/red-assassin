@@ -846,7 +846,9 @@ RA.Game = (function () {
     const sy = shake ? (Math.random() * 2 - 1) * shake : 0;
 
     ctx.save();
-    ctx.translate(-camX + sx, sy);
+    // ВАЖНО: сдвиг мира уже учтён внутри отрисовщиков (x - cam),
+    // поэтому здесь НЕ добавляем -camX, иначе всё уедет вдвое быстрее
+    ctx.translate(sx, sy);
     RA.World.draw(ctx, camX, pal);          // декор → платформы → ворота
     RA.Coins.draw(ctx, camX, time);
     RA.Guards.draw(ctx, camX, time);
